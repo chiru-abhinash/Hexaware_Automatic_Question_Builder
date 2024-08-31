@@ -1,0 +1,4 @@
+username,password,role
+admin,admin123,Administrator
+trainer1,trainer123,Trainer
+employee1,employee123,Employee

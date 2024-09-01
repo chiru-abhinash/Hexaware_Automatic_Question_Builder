@@ -1,22 +1,24 @@
-# pages/employee/learning_and_development.py
+# pages/employee/learning_development.py
 import streamlit as st
+import sqlite3
 
-def show_learning_and_development_page():
+def fetch_learning_resources():
+    conn = sqlite3.connect('app_database.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM question_bank")
+    resources = cursor.fetchall()
+    conn.close()
+    return resources
+
+def learning_development():
     st.title("Learning and Development")
-    
-    # Example list of learning resources (to be dynamically loaded)
-    learning_resources = {
-        "Python Tutorial": 75,
-        "JavaScript Course": 50,
-        "SQL Masterclass": 20
-    }
-    
-    for resource, progress in learning_resources.items():
-        st.write(f"{resource}")
-        st.progress(progress)
 
-    if st.button("Access Learning Materials"):
-        st.success("Learning materials accessed successfully.")
+    resources = fetch_learning_resources()
+    for resource in resources:
+        st.subheader(f"Learning Resource: {resource[2]}")
+        st.write(resource[5])  # Display questions or learning content
+        if st.button(f"Access {resource[2]}"):
+            st.write("Accessing resource...")  # Add functionality to view/download the resource
 
 if __name__ == "__main__":
-    show_learning_and_development_page()
+    learning_development()

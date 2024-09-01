@@ -1,5 +1,5 @@
 import streamlit as st
-import os
+from utils.auth import authenticate_user
 
 # Initialize session state
 if 'authenticated' not in st.session_state:
@@ -7,32 +7,55 @@ if 'authenticated' not in st.session_state:
     st.session_state.role = None
     st.session_state.username = ''
 
+def show_login_page():
+    """Render the login page directly in this function."""
+    st.title("Login Page")
+    
+    username = st.text_input("Username")
+    password = st.text_input("Password", type="password")
+    
+    if st.button("Login"):
+        auth_success, role = authenticate_user(username, password)
+        if auth_success:
+            st.session_state.authenticated = True
+            st.session_state.role = role  # Set the role based on authentication
+            st.session_state.username = username
+            st.success("Login successful! Redirecting...")
+            st.rerun()  # Corrected usage of st.experimental.rerun()
+        else:
+            st.error("Invalid username or password.")
+    
+    if st.button("Forgot Password"):
+        st.info("Password recovery process here.")
+
+def load_dashboard_page():
+    """Load the dashboard page based on the user role."""
+    role = st.session_state.role
+    if role == 'Administrator':
+        load_page('pages/administrator/dashboard.py')
+    elif role == 'Trainer':
+        load_page('pages/trainer/dashboard.py')
+    elif role == 'Employee':
+        load_page('pages/employee/dashboard.py')
+    else:
+        st.error("Invalid role detected. Please contact support.")
+
 def load_page(page_path):
-    with st.spinner('Loading...'):
-        try:
-            # Construct the full path to the page file
-            full_path = os.path.join(os.path.dirname(__file__), page_path)
-            with open(full_path) as f:
-                exec(f.read())
-        except FileNotFoundError:
-            st.error(f"File {full_path} not found. Please check the file path.")
-        except Exception as e:
-            st.error(f"An error occurred while loading the page: {e}")
+    """Load a Streamlit page from the given path."""
+    try:
+        with open(page_path, 'r') as file:
+            code = file.read()
+            exec(code, globals())
+    except FileNotFoundError:
+        st.error(f"File not found: {page_path}")
 
 def main():
     st.set_page_config(page_title="Automated Question Builder", layout="wide")
+    
     if not st.session_state.authenticated:
-        load_page('pages/login.py')
+        show_login_page()
     else:
-        role = st.session_state.role
-        if role == 'Administrator':
-            load_page('pages/administrator/dashboard.py')
-        elif role == 'Trainer':
-            load_page('pages/trainer/dashboard.py')
-        elif role == 'Employee':
-            load_page('pages/employee/dashboard.py')
-        else:
-            st.error("Invalid role detected. Please contact support.")
+        load_dashboard_page()
 
 if __name__ == "__main__":
     main()

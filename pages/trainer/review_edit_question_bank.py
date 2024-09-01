@@ -1,24 +1,23 @@
-# pages/trainer/review_edit_question_bank.py
 import streamlit as st
+import sqlite3
 import pandas as pd
+from io import BytesIO
+
+def load_question_banks():
+    conn = sqlite3.connect('app_database.db')
+    query = "SELECT * FROM question_bank"
+    df = pd.read_sql(query, conn)
+    conn.close()
+    return df
 
 def show_review_edit_question_bank_page():
     st.title("Review and Edit Question Bank")
     
-    # Example: Load the generated question bank (assuming it's stored in a CSV)
-    question_bank_df = pd.read_csv("data/question_bank.csv")
-    st.dataframe(question_bank_df)
+    df = load_question_banks()
+    st.dataframe(df)
     
-    # Example editing options (customize as needed)
-    if st.button("Edit Question"):
-        st.info("Edit functionality is currently under development.")
-    if st.button("Add Question"):
-        st.info("Add functionality is currently under development.")
-    if st.button("Delete Question"):
-        st.info("Delete functionality is currently under development.")
-    
-    if st.button("Save Changes"):
-        st.success("Changes saved successfully.")
-
-if __name__ == "__main__":
-    show_review_edit_question_bank_page()
+    selected_row = st.selectbox("Select a Question Bank to Edit", df.index)
+    if selected_row is not None:
+        row = df.iloc[selected_row]
+        st.write("Editing:", row)
+        # Provide options to edit or delete questions (implement as needed)

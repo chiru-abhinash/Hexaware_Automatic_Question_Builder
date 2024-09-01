@@ -1,14 +1,13 @@
 # pages/employee/logout.py
 import streamlit as st
 
-def show_logout_page():
+def logout():
     st.title("Logout")
-    
-    if st.button("Confirm Logout"):
-        st.session_state.authenticated = False
-        st.session_state.role = None
-        st.session_state.username = ''
-        st.experimental_rerun()
+    st.write("You have been logged out successfully.")
+    st.session_state.username = None
+    st.session_state.user_id = None
+    st.session_state.page = None
+    st.button("Login Page", on_click=lambda: st.experimental_rerun())
 
 if __name__ == "__main__":
-    show_logout_page()
+    logout()

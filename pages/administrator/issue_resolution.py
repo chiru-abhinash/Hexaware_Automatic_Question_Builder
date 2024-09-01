@@ -1,7 +1,7 @@
 # pages/administrator/issue_resolution.py
 import streamlit as st
 import pandas as pd
-
+from utils.notifications import display_notification
 def show_issue_resolution_page():
     st.title("Issue Resolution")
     
@@ -20,3 +20,4 @@ def show_issue_resolution_page():
 
 if __name__ == "__main__":
     show_issue_resolution_page()
+    

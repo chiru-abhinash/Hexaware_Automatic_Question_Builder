@@ -1,46 +1,48 @@
 import streamlit as st
+from pages.administrator.user_management import show_user_management_page
+from pages.administrator.system_monitoring import show_system_monitoring_page
+from pages.administrator.report_generation import show_report_generation_page
+from pages.administrator.settings import show_settings_page
+from pages.administrator.issue_resolution import show_issue_resolution_page
+
+def logout():
+    """Handle user logout and redirect to the login page."""
+    st.session_state.authenticated = False
+    st.session_state.role = None
+    st.session_state.username = ''
+    st.session_state.page = "login"
+    st.rerun()  # Rerun the app to redirect to the login page
 
 def show_admin_dashboard():
     st.title("Administrator Dashboard")
     st.write(f"Welcome, {st.session_state.username}")
 
-    # Example metrics
-    st.metric(label="System Uptime", value="99.9%")
-    st.metric(label="Active Users", value="124")
-    
     st.subheader("Quick Links")
-
-    # Buttons to redirect to different functionalities
     if st.button("User Management"):
-        load_page('pages/administrator/user_management.py')
-        
+        st.session_state.page = "user_management"
     if st.button("System Monitoring"):
-        load_page('pages/administrator/system_monitoring.py')
-        
+        st.session_state.page = "system_monitoring"
     if st.button("Report Generation"):
-        load_page('pages/administrator/report_generation.py')
-        
+        st.session_state.page = "report_generation"
     if st.button("Settings"):
-        load_page('pages/administrator/settings.py')
-        
+        st.session_state.page = "settings"
     if st.button("Issue Resolution"):
-        load_page('pages/administrator/issue_resolution.py')
-    
-    # Logout button
+        st.session_state.page = "issue_resolution"
     if st.button("Logout"):
-        st.session_state.authenticated = False
-        st.session_state.role = None
-        st.session_state.username = ''
-        st.experimental_rerun()  # Rerun the app to redirect to the login page
+        logout()  # Directly call the logout function
 
-def load_page(page_path):
-    """Load a Streamlit page from the given path."""
-    try:
-        with open(page_path, 'r') as file:
-            code = file.read()
-            exec(code, globals())
-    except FileNotFoundError:
-        st.error(f"File not found: {page_path}")
+    # Check and load the correct page
+    if 'page' in st.session_state:
+        if st.session_state.page == "user_management":
+            show_user_management_page()
+        elif st.session_state.page == "system_monitoring":
+            show_system_monitoring_page()
+        elif st.session_state.page == "report_generation":
+            show_report_generation_page()
+        elif st.session_state.page == "settings":
+            show_settings_page()
+        elif st.session_state.page == "issue_resolution":
+            show_issue_resolution_page()
 
 if __name__ == "__main__":
     show_admin_dashboard()

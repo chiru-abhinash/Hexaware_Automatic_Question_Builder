@@ -39,10 +39,7 @@ def show_trainer_dashboard():
             show_download_question_bank_page()
         elif st.session_state.page == "feedback":
             show_feedback_page()
-        elif st.session_state.page == "login":
-            # Redirect to the login page
-            import main
-            main.show_login_page()
+        
 
 if __name__ == "__main__":
     show_trainer_dashboard()

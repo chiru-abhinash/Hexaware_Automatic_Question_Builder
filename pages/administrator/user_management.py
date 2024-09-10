@@ -1,7 +1,54 @@
 import streamlit as st
 import pandas as pd
-from utils.auth import add_user, load_users, edit_user, delete_user
+import sqlite3
 
+# Database functions
+def create_connection():
+    return sqlite3.connect('app_database.db')
+
+def add_user(username, password, role):
+    conn = create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute('INSERT INTO users (username, password, role) VALUES (?, ?, ?)', (username, password, role))
+        conn.commit()
+        return True
+    except sqlite3.IntegrityError:
+        return False
+    finally:
+        conn.close()
+
+def load_users():
+    conn = create_connection()
+    users_df = pd.read_sql_query('SELECT username, role FROM users', conn)
+    conn.close()
+    return users_df
+
+def edit_user(username, new_password, new_role):
+    conn = create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute('UPDATE users SET password = ?, role = ? WHERE username = ?', (new_password, new_role, username))
+        conn.commit()
+        return cursor.rowcount > 0
+    except Exception as e:
+        return False
+    finally:
+        conn.close()
+
+def delete_user(username):
+    conn = create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute('DELETE FROM users WHERE username = ?', (username,))
+        conn.commit()
+        return cursor.rowcount > 0
+    except Exception as e:
+        return False
+    finally:
+        conn.close()
+
+# Streamlit UI
 def show_user_management_page():
     st.title("User Management")
 
@@ -22,8 +69,7 @@ def show_user_management_page():
                     st.success("User added successfully.")
                 else:
                     st.error("User already exists or could not be added.")
-                st.experimental_rerun()  # Refresh the page to reflect changes
-    
+
     # Form to Edit User
     with col2:
         st.subheader("Edit User")
@@ -40,7 +86,6 @@ def show_user_management_page():
                     st.success("User updated successfully.")
                 else:
                     st.error("User could not be updated.")
-                st.experimental_rerun()  # Refresh the page to reflect changes
 
     # Form to Delete User
     with col3:
@@ -56,7 +101,6 @@ def show_user_management_page():
                     st.success("User deleted successfully.")
                 else:
                     st.error("User could not be deleted.")
-                st.experimental_rerun()  # Refresh the page to reflect changes
 
     # View Current Users
     st.subheader("Current Users")

@@ -42,10 +42,6 @@ def show_employee_dashboard():
             request_learning_plan()
         elif st.session_state.page == "logout":
             logout()
-        elif st.session_state.page == "login":
-            # Redirect to the login page
-            import main
-            main.show_login_page()
-
+        
 if __name__ == "__main__":
     show_employee_dashboard()

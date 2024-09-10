@@ -1,20 +1,22 @@
 import sqlite3
 
 def authenticate_user(username, password):
-    """Authenticate user credentials and return authentication status and role."""
+    """Authenticate user credentials and return authentication status, role, and user_id."""
     try:
         conn = sqlite3.connect('app_database.db')
         cursor = conn.cursor()
-        cursor.execute('SELECT password, role FROM users WHERE username = ?', (username,))
+        cursor.execute('SELECT id, password, role FROM users WHERE username = ?', (username,))
         result = cursor.fetchone()
         conn.close()
         
-        if result and result[0] == password:
-            return True, result[1]  # Return True and the user's role
-        return False, None  # Return False if authentication fails
+        if result and result[1] == password:
+            user_id, _, role = result
+            return True, role, user_id  # Return True, the user's role, and user_id
+        return False, None, None  # Return False if authentication fails
     except Exception as e:
         print(f"Error during authentication: {e}")
-        return False, None  # Return False if an exception occurs
+        return False, None, None  # Return False if an exception occurs
+
     
 
 import pandas as pd

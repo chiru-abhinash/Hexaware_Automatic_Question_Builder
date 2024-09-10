@@ -1,9 +1,12 @@
-# pages/employee/request_learning_plan.py
 import streamlit as st
 import sqlite3
 
 def request_learning_plan():
     st.title("Request Learning Plan")
+
+    # Initialize st.session_state.employee_id if not already initialized
+    if 'employee_id' not in st.session_state:
+        st.session_state.employee_id = None  # or set it to a specific default value
 
     technology = st.selectbox("Select Technology", ["Python", "Java", "C++"])
     areas_of_improvement = st.text_area("Areas of Improvement")
@@ -15,7 +18,7 @@ def request_learning_plan():
         cursor.execute('''
             INSERT INTO learning_plans (employee_id, technology, areas_of_improvement, learning_goals)
             VALUES (?, ?, ?, ?)
-        ''', (st.session_state.user_id, technology, areas_of_improvement, learning_goals))
+        ''', (st.session_state.employee_id, technology, areas_of_improvement, learning_goals))
         conn.commit()
         conn.close()
         st.success("Learning plan requested successfully!")

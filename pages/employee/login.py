@@ -1,21 +1,26 @@
-# pages/employee/login.py
+# pages/employee/login.py (Example of setting user_id)
 import streamlit as st
-from utils.auth import authenticate_user
+import sqlite3
 
-def show_login_page():
-    st.title("Employee Login")
+def login():
+    st.title("Login")
+    
     username = st.text_input("Username")
     password = st.text_input("Password", type="password")
     
     if st.button("Login"):
-        role = authenticate_user(username, password)
-        if role == 'Employee':
+        conn = sqlite3.connect('app_database.db')
+        cursor = conn.cursor()
+        cursor.execute("SELECT id FROM users WHERE username=? AND password=?", (username, password))
+        user = cursor.fetchone()
+        
+        if user:
+            st.session_state.user_id = user[0]
             st.session_state.authenticated = True
-            st.session_state.role = role
             st.session_state.username = username
-            st.experimental_rerun()
+            st.success("Login successful!")
         else:
-            st.error("Invalid credentials or role. Please try again.")
+            st.error("Invalid credentials")
 
 if __name__ == "__main__":
-    show_login_page()
+    login()

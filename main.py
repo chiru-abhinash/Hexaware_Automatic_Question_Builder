@@ -15,11 +15,12 @@ def show_login_page():
     password = st.text_input("Password", type="password")
     
     if st.button("Login"):
-        auth_success, role = authenticate_user(username, password)
+        auth_success, role, user_id = authenticate_user(username, password)
         if auth_success:
             st.session_state.authenticated = True
             st.session_state.role = role  # Set the role based on authentication
             st.session_state.username = username
+            st.session_state.user_id = user_id  # Set the user_id
             st.success("Login successful! Redirecting...")
             st.rerun()  # Corrected usage of st.experimental.rerun()
         else:
@@ -27,6 +28,7 @@ def show_login_page():
     
     if st.button("Forgot Password"):
         st.info("Password recovery process here.")
+
 
 def load_dashboard_page():
     """Load the dashboard page based on the user role."""

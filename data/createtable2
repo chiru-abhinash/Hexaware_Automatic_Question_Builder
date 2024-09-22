@@ -1,0 +1,25 @@
+import sqlite3
+
+def create_learning_progress_table():
+    conn = sqlite3.connect('app_database.db')
+    cursor = conn.cursor()
+
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS learning_progress (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            resource_id INTEGER NOT NULL,
+            progress INTEGER DEFAULT 0,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id),
+            FOREIGN KEY (resource_id) REFERENCES learning_resources(id),
+            UNIQUE (user_id, resource_id)  -- Unique constraint
+        );
+    ''')
+
+    conn.commit()
+    conn.close()
+    print("Learning progress table created successfully.")
+
+# Run the function to create the table
+create_learning_progress_table()

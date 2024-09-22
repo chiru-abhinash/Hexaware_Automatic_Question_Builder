@@ -1,30 +1,30 @@
+# pages/trainer/upload_curriculum.py
 import streamlit as st
 import sqlite3
 import pandas as pd
-from io import BytesIO
 
 def get_trainer_id(username):
+    """Fetch the trainer ID based on the username."""
     conn = sqlite3.connect('app_database.db')
     cursor = conn.cursor()
     cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
     trainer_id = cursor.fetchone()
     conn.close()
-    if trainer_id:
-        return trainer_id[0]
-    else:
-        return None
+    return trainer_id[0] if trainer_id else None
 
 def show_upload_curriculum_page():
+    """Render the Upload Curriculum page."""
     st.title("Upload Curriculum")
     
-    if 'username' not in st.session_state:
-        st.error("Please log in first.")
+    # Ensure user is logged in and has the correct role
+    if 'username' not in st.session_state or st.session_state.role != "Trainer":
+        st.error("Unauthorized access. Please log in as a Trainer.")
         return
     
     technology = st.selectbox("Select Technology", ["Python", "Java", "C++"])
     file = st.file_uploader("Upload Curriculum File", type=["csv", "xlsx"])
     
-    if st.button("Submit"):
+    if st.button("Submit", key="upload_curriculum_submit"):
         if file:
             # Get trainer ID from session state
             trainer_id = get_trainer_id(st.session_state.username)
@@ -46,10 +46,9 @@ def show_upload_curriculum_page():
                     # Save the file to the database
                     conn = sqlite3.connect('app_database.db')
                     cursor = conn.cursor()
-                    cursor.execute('''
-                        INSERT INTO curriculum (trainer_id, technology, curriculum_file)
-                        VALUES (?, ?, ?)
-                    ''', (trainer_id, technology, file.read()))
+                    cursor.execute('''INSERT INTO curriculum (trainer_id, technology, curriculum_file)
+                                      VALUES (?, ?, ?)''',
+                                   (trainer_id, technology, file.read()))
                     conn.commit()
                     conn.close()
                     st.success("Curriculum uploaded successfully!")

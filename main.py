@@ -6,9 +6,10 @@ if 'authenticated' not in st.session_state:
     st.session_state.authenticated = False
     st.session_state.role = None
     st.session_state.username = ''
+    st.session_state.user_id = None
 
 def show_login_page():
-    """Render the login page directly in this function."""
+    """Render the login page."""
     st.title("Login Page")
     
     username = st.text_input("Username")
@@ -22,16 +23,16 @@ def show_login_page():
             st.session_state.username = username
             st.session_state.user_id = user_id  # Set the user_id
             st.success("Login successful! Redirecting...")
-            st.rerun()  # Corrected usage of st.experimental.rerun()
+            st.rerun()  # Corrected usage of st.experimental_rerun()
         else:
             st.error("Invalid username or password.")
     
     if st.button("Forgot Password"):
-        st.info("Password recovery process here.")
+        st.info("Password recovery process will be implemented here.")
 
 
 def load_dashboard_page():
-    """Load the dashboard page based on the user role."""
+    """Load the dashboard page based on the user's role."""
     role = st.session_state.role
     if role == 'Administrator':
         load_page('pages/administrator/dashboard.py')

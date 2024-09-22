@@ -1,13 +1,15 @@
-import streamlit as st
+import streamlit as st 
 import sqlite3
 import csv
 import io
 import google.generativeai as genai
-from utils.notifications import display_notification
-# Initialize Gemini API
-genai.configure(api_key="AIzaSyBhbAu6Fc2v7D92eR5NnxzfCosLEv59Y_Y")
+import random
+from utils.notifications import show_notifications_page
 
-# Create the model configuration
+# Initialize Google Gemini API
+genai.configure(api_key="AIzaSyBhbAu6Fc2v7D92eR5NnxzfCosLEv59Y_Y")  # Replace with your actual API key
+
+# Gemini model configuration
 generation_config = {
     "temperature": 1,
     "top_p": 0.95,
@@ -21,7 +23,6 @@ model = genai.GenerativeModel(
     generation_config=generation_config
 )
 
-# Predefined fallback topics
 FALLBACK_TOPICS = ["Introduction", "Keywords", "Syntax", "Features"]
 
 def fetch_topics_from_database(technology):
@@ -32,35 +33,76 @@ def fetch_topics_from_database(technology):
     conn.close()
     
     topics = set()
-
     for blob in blobs:
         curriculum_data = blob[0]
         if curriculum_data:
             csv_data = io.StringIO(curriculum_data.decode('utf-8'))
             reader = csv.reader(csv_data)
             for row in reader:
-                if row:  # Check if the row is not empty
-                    topics.add(row[0])  # Assuming the first column contains the topic
+                if row:  
+                    topics.add(row[0])  # Add topic from the first column in CSV file
 
     return list(topics)
 
-def suggest_related_topics(user_input, all_topics):
-    user_input = user_input.lower()
-    suggestions = [topic for topic in all_topics if user_input in topic.lower()]
-    return suggestions
-
 def generate_questions(technology, topics, num_questions, difficulty_level):
-    prompt = f"Generate {num_questions} {difficulty_level} questions about {', '.join(topics)} in {technology}."
+    # Prompt construction
+    '''
+    prompt = (f"Generate {num_questions} {difficulty_level} questions about {', '.join(topics)} in {technology}. "
+              "Include four answer options for each question, with the first option always being the correct one. "
+              "Format: 'Question? (A) Option1 (B) Option2 (C) Option3 (D) Option4.' "
+              "Only provide the questions and options without any additional commentary.")
+    '''
+    prompt = (f"Generate {num_questions} {difficulty_level} questions about {', '.join(topics)} in {technology}. "
+          "Include four answer options for each question, with the first option always being the correct one. "
+          "Format each question and its options as follows:\n"
+          "1. Question?\n"
+          "(A) Option1\n"
+          "(B) Option2\n"
+          "(C) Option3\n"
+          "(D) Option4\n"
+          "Only provide the questions and options without any additional commentary.")
 
+    # Start the chat with the model
     chat_session = model.start_chat(history=[])
     response = chat_session.send_message(prompt)
 
     if response:
-        questions = response.text.strip().split('\n')
-        display_notification(
-        f"Question bank generation complete! {num_questions} {difficulty_level} questions for {technology} on topics {', '.join(topics)}.",
-        notification_type="success"
-    )
+        questions_data = [line.strip() for line in response.text.strip().split('\n') if line.strip()]
+        
+        questions = []
+        current_question = {}
+
+        # Parsing the generated questions
+        for line in questions_data:
+            if line.startswith(('1.', '2.', '3.', '4.', '5.')):
+                if current_question:
+                    questions.append(current_question)
+
+                current_question = {
+                    'question': line,
+                    'options': [],
+                    'correct_option': 'A'  # Set correct option to 'A'
+                }
+            elif line.startswith(('(A)', '(B)', '(C)', '(D)')):
+                if 'options' in current_question:
+                    current_question['options'].append(line)
+            elif ' (Correct: ' in line:
+                # Skip correct option line since we're controlling it
+                continue
+
+        if current_question:
+            questions.append(current_question)
+
+        # Shuffle options for each question
+        for q in questions:
+            random.shuffle(q['options'])
+
+        # Notify the user about completion
+        if questions:
+            show_notifications_page(
+                notification_text=f"Question bank generation complete! {num_questions} {difficulty_level} questions for {technology} on topics {', '.join(topics)}.",
+                notification_type="success"
+            )
         return questions
     else:
         st.error("Failed to generate questions. Please try again.")
@@ -69,16 +111,24 @@ def generate_questions(technology, topics, num_questions, difficulty_level):
 def save_question_bank(technology, topic, num_questions, difficulty_level, questions):
     conn = sqlite3.connect('app_database.db')
     cursor = conn.cursor()
-    cursor.execute('''
-        INSERT INTO question_bank (technology, topic, num_questions, difficulty_level, questions)
-        VALUES (?, ?, ?, ?, ?)
-    ''', (technology, topic, num_questions, difficulty_level, "\n".join(questions)))
+    
+    # Preparing the questions and options in the required format
+    questions_str = ":::".join([q['question'] for q in questions])  # Separate each question with ':::'
+    options_str = ":::".join([";;".join(q['options']) for q in questions])  # Separate options with ';;' and question sets with ':::'
+    correct_answers_str = ";;".join([q['correct_option'] for q in questions])  # Store correct answers (all 'A')
+
+    # Insert into the database
+    cursor.execute('''INSERT INTO question_bank (technology, topic, num_questions, difficulty_level, questions, options, correct_option)
+                      VALUES (?, ?, ?, ?, ?, ?, ?)''', 
+                   (technology, topic, num_questions, difficulty_level, questions_str, options_str, correct_answers_str))
+    
     conn.commit()
     conn.close()
 
 def show_generate_question_bank_page():
     st.title("Generate Question Bank")
     
+    # Select technology
     technology = st.selectbox("Select Technology", ["Python", "Java", "C++"])
     all_topics = fetch_topics_from_database(technology)
     
@@ -86,23 +136,31 @@ def show_generate_question_bank_page():
         st.warning("No topics found for the selected technology. Please enter topics manually.")
         all_topics = FALLBACK_TOPICS
     
-    user_input = st.text_input("Enter topics (comma-separated)")
+    # Allow user to input topics
+    user_input = st.text_input("Enter topics (comma-separated)", placeholder="E.g. Introduction, Syntax")
     
     if user_input:
         topics = [topic.strip() for topic in user_input.split(',') if topic.strip()]
     else:
-        topics = FALLBACK_TOPICS
+        topics = []
 
+    # Input for number of questions and difficulty level
     num_questions = st.number_input("Number of Questions", min_value=1, max_value=50, value=5)
     difficulty_level = st.selectbox("Difficulty Level", ["easy", "medium", "hard"])
     
+    # Generate button
     if st.button("Generate"):
         if topics:
             questions = generate_questions(technology, topics, num_questions, difficulty_level)
-            save_question_bank(technology, ', '.join(topics), num_questions, difficulty_level, questions)
-            st.success("Questions generated and saved successfully!")
-            st.write("Generated Questions:")
-            st.write(questions)
+            if questions:
+                save_question_bank(technology, ', '.join(topics), num_questions, difficulty_level, questions)
+                st.success("Questions generated and saved successfully!")
+                st.write("Generated Questions:")
+                for q in questions:
+                    st.write(f"**{q['question']}**")
+                    for i, option in enumerate(q['options']):
+                        st.write(f"{chr(65 + i)}. {option}")
+                st.write(f"Correct Option: A")  # Always display 'A' as correct option
         else:
             st.error("Please enter at least one topic.")
 

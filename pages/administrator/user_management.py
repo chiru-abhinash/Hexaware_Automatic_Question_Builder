@@ -52,6 +52,10 @@ def delete_user(username):
 def show_user_management_page():
     st.title("User Management")
 
+    # Refresh user list before displaying it
+    users_df = load_users()
+    usernames = users_df['username'].tolist()
+
     # Display all forms in columns
     col1, col2, col3 = st.columns([1, 1, 1])
 
@@ -67,44 +71,48 @@ def show_user_management_page():
             if submit_button:
                 if add_user(new_username, new_password, role):
                     st.success("User added successfully.")
+                    st.rerun()  # Refresh the page after successful add
                 else:
                     st.error("User already exists or could not be added.")
 
     # Form to Edit User
     with col2:
         st.subheader("Edit User")
-        with st.form(key='edit_user_form'):
-            users_df = load_users()
-            usernames = users_df['username'].tolist()
-            selected_user = st.selectbox("Select User", usernames, key='selected_user')
-            new_password = st.text_input("New Password", type="password", key='new_password_edit')
-            new_role = st.selectbox("New Role", ["Administrator", "Trainer", "Employee"], key='new_role_edit')
-            submit_button = st.form_submit_button(label='Update User')
-            
-            if submit_button:
-                if edit_user(selected_user, new_password, new_role):
-                    st.success("User updated successfully.")
-                else:
-                    st.error("User could not be updated.")
+        if usernames:
+            with st.form(key='edit_user_form'):
+                selected_user = st.selectbox("Select User", usernames, key='selected_user')
+                new_password = st.text_input("New Password", type="password", key='new_password_edit')
+                new_role = st.selectbox("New Role", ["Administrator", "Trainer", "Employee"], key='new_role_edit')
+                submit_button = st.form_submit_button(label='Update User')
+
+                if submit_button:
+                    if edit_user(selected_user, new_password, new_role):
+                        st.success("User updated successfully.")
+                        st.rerun()  # Refresh the page after successful edit
+                    else:
+                        st.error("User could not be updated.")
+        else:
+            st.warning("No users available for editing.")
 
     # Form to Delete User
     with col3:
         st.subheader("Delete User")
-        with st.form(key='delete_user_form'):
-            users_df = load_users()
-            usernames = users_df['username'].tolist()
-            selected_user = st.selectbox("Select User to Delete", usernames, key='selected_user_delete')
-            submit_button = st.form_submit_button(label='Delete User')
-            
-            if submit_button:
-                if delete_user(selected_user):
-                    st.success("User deleted successfully.")
-                else:
-                    st.error("User could not be deleted.")
+        if usernames:
+            with st.form(key='delete_user_form'):
+                selected_user = st.selectbox("Select User to Delete", usernames, key='selected_user_delete')
+                submit_button = st.form_submit_button(label='Delete User')
+
+                if submit_button:
+                    if delete_user(selected_user):
+                        st.success("User deleted successfully.")
+                        st.rerun()  # Refresh the page after successful delete
+                    else:
+                        st.error("User could not be deleted.")
+        else:
+            st.warning("No users available for deletion.")
 
     # View Current Users
     st.subheader("Current Users")
-    users_df = load_users()
     st.dataframe(users_df)
 
 if __name__ == "__main__":

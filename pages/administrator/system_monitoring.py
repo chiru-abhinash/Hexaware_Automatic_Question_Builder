@@ -1,7 +1,11 @@
 # pages/administrator/system_monitoring.py
 import streamlit as st
 import psutil
-from datetime import datetime
+import pandas as pd
+from utils.database import (
+    fetch_all,
+    fetch_one,
+)
 
 def get_cpu_usage():
     return f"{psutil.cpu_percent(interval=1)}%"
@@ -11,18 +15,24 @@ def get_memory_usage():
     return f"{mem.percent}%"
 
 def get_error_logs():
-    # Placeholder for real error log fetching
-    # Example static logs; replace with actual log reading logic
+    # Fetch error logs from the database
+    error_logs = fetch_all("SELECT * FROM error_logs ORDER BY timestamp DESC LIMIT 10")
+    if error_logs:
+        return "\n".join([f"{log['timestamp']}: {log['message']}" for log in error_logs])
     return "No errors detected in the past 24 hours."
 
 def get_user_activity_logs():
-    # Placeholder for real user activity log fetching
-    # Example static logs; replace with actual log reading logic
+    # Fetch user activity logs from the database
+    activity_logs = fetch_all("SELECT * FROM user_activity_logs ORDER BY timestamp DESC LIMIT 10")
+    if activity_logs:
+        return "\n".join([f"{log['timestamp']}: User {log['username']} performed {log['action']}" for log in activity_logs])
     return "User activity logs are currently not available."
 
 def get_alerts():
-    # Placeholder for real alerts fetching
-    # Example static alerts; replace with actual alerts fetching logic
+    # Fetch alerts from the database
+    alerts = fetch_all("SELECT * FROM alerts WHERE active = 1")
+    if alerts:
+        return "\n".join([f"Alert: {alert['message']} (Triggered at: {alert['timestamp']})" for alert in alerts])
     return "No active alerts."
 
 def show_system_monitoring_page():

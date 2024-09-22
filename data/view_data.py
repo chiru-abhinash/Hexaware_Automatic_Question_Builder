@@ -1,24 +1,25 @@
 import sqlite3
-import pandas as pd
 
-# Correct path to your SQLite database
-db_path = r'app_database.db'
-conn = sqlite3.connect(db_path)
-
-# Function to load data from the users table
-def load_data():
-    query = 'SELECT * FROM users'
-    return pd.read_sql(query, conn)
-
-def main():
+# Database connection setup
+def get_db_connection():
     try:
-        df = load_data()
-        print(df)
-    except Exception as e:
-        print(f"An error occurred: {e}")
-    finally:
+        conn = sqlite3.connect('app_database.db')
+        conn.row_factory = sqlite3.Row  # Allows access to columns by name
+        conn.execute('PRAGMA foreign_keys = ON')  # Enforce foreign key constraints
+        return conn
+    except sqlite3.Error as e:
+        print(f"Error connecting to database: {e}")
+        return None
+
+# Function to list tables in the database
+def list_tables():
+    conn = get_db_connection()
+    if conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+        tables = cursor.fetchall()
+        print("Tables in database:", tables)
         conn.close()
 
-# Run the main function
 if __name__ == "__main__":
-    main()
+    list_tables()

@@ -1,4 +1,16 @@
+# pages/employee/feedback_submission.py
 import streamlit as st
+import sqlite3
+
+def save_feedback(feedback_type, feedback):
+    conn = sqlite3.connect('app_database.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO feedback (feedback_type, feedback_text)
+        VALUES (?, ?)
+    ''', (feedback_type, feedback))
+    conn.commit()
+    conn.close()
 
 def feedback_submission_page():
     st.title("Feedback Submission")
@@ -8,16 +20,12 @@ def feedback_submission_page():
     feedback_type = st.selectbox("Feedback Type", ["Learning Materials", "Question Banks"])
     feedback = st.text_area("Your Feedback", help="Provide detailed feedback.")
     
-    # Assign a unique key to each button
-    if st.button("Submit Feedback", key="feedback_submit_button"):
-        # Logic to handle feedback submission
-        st.success("Thank you! Your feedback has been submitted.")
-
-def another_function_with_button():
-    if st.button("Submit The Feedback", key="another_unique_key"):
-        # Logic for another button with the same label
-        st.success("Another feedback was submitted.")
+    if st.button("Submit Feedback"):
+        if feedback:
+            save_feedback(feedback_type, feedback)
+            st.success("Thank you! Your feedback has been submitted.")
+        else:
+            st.error("Please provide your feedback before submitting.")
 
 if __name__ == "__main__":
     feedback_submission_page()
-    another_function_with_button()

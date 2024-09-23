@@ -46,22 +46,16 @@ def fetch_topics_from_database(technology):
 
 def generate_questions(technology, topics, num_questions, difficulty_level):
     # Prompt construction
-    '''
     prompt = (f"Generate {num_questions} {difficulty_level} questions about {', '.join(topics)} in {technology}. "
               "Include four answer options for each question, with the first option always being the correct one. "
-              "Format: 'Question? (A) Option1 (B) Option2 (C) Option3 (D) Option4.' "
+              "Format each question and its options as follows:\n"
+              "1. Question?\n"
+              "(A) Option1\n"
+              "(B) Option2\n"
+              "(C) Option3\n"
+              "(D) Option4\n"
               "Only provide the questions and options without any additional commentary.")
-    '''
-    prompt = (f"Generate {num_questions} {difficulty_level} questions about {', '.join(topics)} in {technology}. "
-          "Include four answer options for each question, with the first option always being the correct one. "
-          "Format each question and its options as follows:\n"
-          "1. Question?\n"
-          "(A) Option1\n"
-          "(B) Option2\n"
-          "(C) Option3\n"
-          "(D) Option4\n"
-          "Only provide the questions and options without any additional commentary.")
-
+    
     # Start the chat with the model
     chat_session = model.start_chat(history=[])
     response = chat_session.send_message(prompt)
@@ -108,25 +102,36 @@ def generate_questions(technology, topics, num_questions, difficulty_level):
         st.error("Failed to generate questions. Please try again.")
         return []
 
-def save_question_bank(technology, topic, num_questions, difficulty_level, questions):
+def save_question_bank(trainer_id, technology, topic, num_questions, difficulty_level, questions):
     conn = sqlite3.connect('app_database.db')
     cursor = conn.cursor()
-    
-    # Preparing the questions and options in the required format
-    questions_str = ":::".join([q['question'] for q in questions])  # Separate each question with ':::'
-    options_str = ":::".join([";;".join(q['options']) for q in questions])  # Separate options with ';;' and question sets with ':::'
-    correct_answers_str = ";;".join([q['correct_option'] for q in questions])  # Store correct answers (all 'A')
 
-    # Insert into the database
-    cursor.execute('''INSERT INTO question_bank (technology, topic, num_questions, difficulty_level, questions, options, correct_option)
-                      VALUES (?, ?, ?, ?, ?, ?, ?)''', 
-                   (technology, topic, num_questions, difficulty_level, questions_str, options_str, correct_answers_str))
+    try:
+        # Preparing the questions and options in the required format
+        questions_str = ":::".join([q['question'] for q in questions])  # Separate each question with ':::'
+        options_str = ":::".join([";;".join(q['options']) for q in questions])  # Separate options with ';;' and question sets with ':::'
+        correct_answers_str = ";;".join([q['correct_option'] for q in questions])  # Store correct answers (all 'A')
+
+        # Insert into the database
+        cursor.execute('''INSERT INTO question_bank (trainer_id, technology, topic, num_questions, difficulty_level, questions, options, correct_option)
+                          VALUES (?, ?, ?, ?, ?, ?, ?, ?)''', 
+                       (trainer_id, technology, topic, num_questions, difficulty_level, questions_str, options_str, correct_answers_str))
+        
+        conn.commit()
+        st.success("Questions saved successfully!")
     
-    conn.commit()
-    conn.close()
+    except Exception as e:
+        conn.rollback()
+        st.error(f"An error occurred: {str(e)}")
+
+    finally:
+        conn.close()
 
 def show_generate_question_bank_page():
     st.title("Generate Question Bank")
+    
+    # Simulated trainer_id (for demonstration; replace with actual login-based value)
+    trainer_id = 1  # This should be dynamic based on the logged-in trainer
     
     # Select technology
     technology = st.selectbox("Select Technology", ["Python", "Java", "C++"])
@@ -153,8 +158,7 @@ def show_generate_question_bank_page():
         if topics:
             questions = generate_questions(technology, topics, num_questions, difficulty_level)
             if questions:
-                save_question_bank(technology, ', '.join(topics), num_questions, difficulty_level, questions)
-                st.success("Questions generated and saved successfully!")
+                save_question_bank(trainer_id, technology, ', '.join(topics), num_questions, difficulty_level, questions)
                 st.write("Generated Questions:")
                 for q in questions:
                     st.write(f"**{q['question']}**")

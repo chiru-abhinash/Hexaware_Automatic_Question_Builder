@@ -21,25 +21,41 @@ def save_to_excel(df):
     return output
 
 def save_to_pdf(df):
-    """Save question bank data to a PDF file."""
+    """Save question bank data to a PDF file with enhanced layout."""
     pdf = FPDF()
     pdf.add_page()
+
+    # Set Title
+    pdf.set_font("Arial", style='B', size=16)
+    pdf.cell(200, 10, txt="Question Bank", ln=True, align='C')
+    pdf.ln(10)  # Add space after the title
+
+    # Set font for content
     pdf.set_font("Arial", size=12)
-    
+
+    # Loop through each question in the DataFrame
     for index, row in df.iterrows():
-        pdf.cell(200, 10, txt=f"Question {index+1}: {row['Question']}", ln=True)
-        pdf.multi_cell(200, 10, txt=f"Options: {row['Options']}")
-        pdf.ln(10)  # Add some space between questions
-    
+        # Question number and content
+        pdf.set_font("Arial", style='B', size=12)
+        pdf.cell(200, 10, txt=f"Question {index+1}: {row['Question']}", ln=True, border=1, align='L')
+        pdf.ln(5)  # Add some space between the question and options
+
+        # Options displayed with borders and on new lines
+        options = row['Options'].split(" | ")
+        pdf.set_font("Arial", size=12)
+        for i, option in enumerate(options):
+            option_text = f"Option {chr(65 + i)}: {option}"  # Convert to A, B, C, etc.
+            pdf.cell(200, 10, txt=option_text, ln=True, border=1)
+        
+        pdf.ln(10)  # Add space after each question
+
     # Write PDF content to a BytesIO buffer
     output = BytesIO()
     pdf_output = pdf.output(dest='S').encode('latin1')  # Convert to byte-like object for writing
-    
     output.write(pdf_output)
     output.seek(0)  # Move the cursor to the beginning of the stream for reading
-    
-    return output
 
+    return output
 
 def parse_question_data(questions, options):
     """Parse questions and options from the database into lists."""

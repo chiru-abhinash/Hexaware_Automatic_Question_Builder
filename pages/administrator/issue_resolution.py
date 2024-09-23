@@ -76,7 +76,7 @@ def show_issue_resolution_page():
                     st.success(f"Issue has been created from feedback ID {feedback_row['id']}.")
                 else:
                     st.error("User ID is not available. Cannot create issue.")
-                st.experimental_rerun()
+                st.rerun()
 
     # Load and display existing issues
     st.subheader("Existing Issues")

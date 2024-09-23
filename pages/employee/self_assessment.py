@@ -3,7 +3,10 @@ import sqlite3
 import pandas as pd
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
+from reportlab.lib import colors
+from reportlab.lib.units import inch
 import io
+import datetime
 
 def load_question_banks():
     """Load the question banks from the database."""
@@ -42,27 +45,6 @@ def parse_question_data(questions, options):
     
     return parsed_data
 
-def update_question_bank(row_id, technology, topic, num_questions, difficulty_level, updated_questions, updated_options):
-    """Update the question bank entry in the database."""
-    conn = sqlite3.connect('app_database.db')
-    cursor = conn.cursor()
-    cursor.execute('''UPDATE question_bank
-                      SET technology = ?, topic = ?, num_questions = ?, difficulty_level = ?, questions = ?, options = ?
-                      WHERE id = ?''', 
-                   (technology, topic, num_questions, difficulty_level, updated_questions, updated_options, row_id))
-    conn.commit()
-    conn.close()
-    st.success("Question bank updated successfully!")
-
-def delete_question_bank(row_id):
-    """Delete a question bank entry from the database."""
-    conn = sqlite3.connect('app_database.db')
-    cursor = conn.cursor()
-    cursor.execute('DELETE FROM question_bank WHERE id = ?', (row_id,))
-    conn.commit()
-    conn.close()
-    st.success("Question bank deleted successfully!")
-
 def evaluate_answers(parsed_data):
     """Evaluate the user's answers against the correct options."""
     score = 0
@@ -76,18 +58,57 @@ def evaluate_answers(parsed_data):
     return score, total_questions
 
 def generate_certificate(score, total_questions):
-    """Generate a simple certificate message."""
+    """Generate a message indicating the score."""
     return f"You scored **{score} out of {total_questions}**!"
 
-def create_pdf_certificate(score, total_questions):
-    """Create a PDF certificate."""
+def create_pdf_certificate(name, course_name, score, total_questions):
+    """Create a visually enhanced PDF certificate."""
     buffer = io.BytesIO()
     c = canvas.Canvas(buffer, pagesize=letter)
     width, height = letter
 
-    c.drawString(100, height - 100, "Certificate of Completion")
-    c.drawString(100, height - 130, f"This certifies that you have completed the self-assessment.")
-    c.drawString(100, height - 160, f"You scored {score} out of {total_questions}.")
+    # Set background color and borders
+    c.setFillColor(colors.lightblue)
+    c.rect(0, 0, width, height, fill=True, stroke=False)
+
+    # Certificate title
+    c.setFillColor(colors.darkblue)
+    c.setFont("Helvetica-Bold", 24)
+    c.drawCentredString(width / 2.0, height - 100, "Certificate of Completion")
+
+    # Body of the certificate
+    c.setFont("Helvetica", 16)
+    c.setFillColor(colors.black)
+    c.drawCentredString(width / 2.0, height - 150, f"This is to certify that")
+    
+    # Issued to
+    c.setFont("Helvetica-Bold", 18)
+    c.drawCentredString(width / 2.0, height - 180, name)
+
+    # Course name and score details
+    c.setFont("Helvetica", 16)
+    c.drawCentredString(width / 2.0, height - 220, f"has successfully completed the course:")
+    c.setFont("Helvetica-Bold", 18)
+    c.drawCentredString(width / 2.0, height - 250, course_name)
+    
+    c.setFont("Helvetica", 16)
+    c.drawCentredString(width / 2.0, height - 290, f"with a score of {score} out of {total_questions}.")
+    
+    # Date issued
+    issue_date = datetime.date.today().strftime("%B %d, %Y")
+    c.drawCentredString(width / 2.0, height - 330, f"Issued on: {issue_date}")
+
+    # Signature placeholder
+    c.setFont("Helvetica", 14)
+    c.drawString(width / 2.5, height - 420, "____________________________")
+    c.drawString(width / 2.5, height - 440, "Authorized Signature")
+    
+    # Add a bottom border
+    c.setLineWidth(2)
+    c.setStrokeColor(colors.darkblue)
+    c.line(50, 50, width - 50, 50)
+
+    # Save the PDF content
     c.save()
     
     buffer.seek(0)
@@ -116,14 +137,17 @@ def self_assessment():
             certificate_message = generate_certificate(score, total_questions)
             st.write(certificate_message)
             
-            if score == total_questions:  # Check if criteria met for certificate download
-                pdf_buffer = create_pdf_certificate(score, total_questions)
+            # Check if user scored 70% or higher to generate a certificate
+            if score / total_questions >= 0.7:
+                pdf_buffer = create_pdf_certificate("Abhinash", row['technology'] + " - " + row['topic'], score, total_questions)
                 st.download_button(
                     label="Download Certificate",
                     data=pdf_buffer,
-                    file_name="certificate.pdf",
+                    file_name="completion_certificate.pdf",
                     mime="application/pdf"
                 )
+            else:
+                st.write("You need at least 70% to receive a certificate.")
 
 def show_review_edit_question_bank_page():
     st.title("Review and Edit Question Bank")
@@ -175,10 +199,31 @@ def show_review_edit_question_bank_page():
             delete_question_bank(row['id'])
             st.rerun()  # Refresh the page after deletion
 
+def update_question_bank(row_id, technology, topic, num_questions, difficulty_level, updated_questions, updated_options):
+    """Update the question bank entry in the database."""
+    conn = sqlite3.connect('app_database.db')
+    cursor = conn.cursor()
+    cursor.execute('''UPDATE question_bank
+                      SET technology = ?, topic = ?, num_questions = ?, difficulty_level = ?, questions = ?, options = ?
+                      WHERE id = ?''', 
+                   (technology, topic, num_questions, difficulty_level, updated_questions, updated_options, row_id))
+    conn.commit()
+    conn.close()
+    st.success("Question bank updated successfully!")
+
+def delete_question_bank(row_id):
+    """Delete a question bank entry from the database."""
+    conn = sqlite3.connect('app_database.db')
+    cursor = conn.cursor()
+    cursor.execute('DELETE FROM question_bank WHERE id = ?', (row_id,))
+    conn.commit()
+    conn.close()
+    st.success("Question bank deleted successfully!")
+
 if __name__ == "__main__":
     st.sidebar.title("Navigation")
     app_mode = st.sidebar.selectbox("Choose Page", ["Self-Assessment", "Review and Edit Question Bank"])
-
+    
     if app_mode == "Self-Assessment":
         self_assessment()
     elif app_mode == "Review and Edit Question Bank":

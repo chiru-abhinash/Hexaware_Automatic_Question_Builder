@@ -24,13 +24,24 @@ def load_users():
     conn.close()
     return users_df
 
-def edit_user(username, new_password, new_role):
+def get_user_details(username):
+    conn = create_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT password, role FROM users WHERE username = ?', (username,))
+    user_data = cursor.fetchone()
+    conn.close()
+    return user_data
+
+def edit_user(username, new_password=None, new_role=None):
     conn = create_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute('UPDATE users SET password = ?, role = ? WHERE username = ?', (new_password, new_role, username))
+        if new_password:
+            cursor.execute('UPDATE users SET password = ? WHERE username = ?', (new_password, username))
+        if new_role:
+            cursor.execute('UPDATE users SET role = ? WHERE username = ?', (new_role, username))
         conn.commit()
-        return cursor.rowcount > 0
+        return True
     except Exception as e:
         return False
     finally:
@@ -67,7 +78,7 @@ def show_user_management_page():
             new_password = st.text_input("Password", type="password", key='new_password')
             role = st.selectbox("Role", ["Administrator", "Trainer", "Employee"], key='role')
             submit_button = st.form_submit_button(label='Add User')
-            
+
             if submit_button:
                 if add_user(new_username, new_password, role):
                     st.success("User added successfully.")
@@ -79,18 +90,30 @@ def show_user_management_page():
     with col2:
         st.subheader("Edit User")
         if usernames:
-            with st.form(key='edit_user_form'):
-                selected_user = st.selectbox("Select User", usernames, key='selected_user')
-                new_password = st.text_input("New Password", type="password", key='new_password_edit')
-                new_role = st.selectbox("New Role", ["Administrator", "Trainer", "Employee"], key='new_role_edit')
-                submit_button = st.form_submit_button(label='Update User')
+            selected_user = st.selectbox("Select User", usernames, key='selected_user')
 
-                if submit_button:
-                    if edit_user(selected_user, new_password, new_role):
-                        st.success("User updated successfully.")
-                        st.rerun()  # Refresh the page after successful edit
-                    else:
-                        st.error("User could not be updated.")
+            if selected_user:
+                # Load the current details of the selected user
+                user_details = get_user_details(selected_user)
+                if user_details:
+                    current_password, current_role = user_details
+
+                    # Pre-fill with current user data
+                    with st.form(key='edit_user_form'):
+                        new_password = st.text_input("New Password (Leave blank to keep current)", type="password", value="", key='new_password_edit')
+                        new_role = st.selectbox("New Role", ["Administrator", "Trainer", "Employee"], index=["Administrator", "Trainer", "Employee"].index(current_role), key='new_role_edit')
+                        submit_button = st.form_submit_button(label='Update User')
+
+                        if submit_button:
+                            # Only update fields that were modified
+                            updated_password = new_password if new_password else None
+                            updated_role = new_role if new_role != current_role else None
+
+                            if edit_user(selected_user, updated_password, updated_role):
+                                st.success("User updated successfully.")
+                                st.rerun()  # Refresh the page after successful edit
+                            else:
+                                st.error("User could not be updated.")
         else:
             st.warning("No users available for editing.")
 

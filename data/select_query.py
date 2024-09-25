@@ -21,4 +21,4 @@ def display_table(table_name):
         print(f"No records found in the {table_name} table.")
 
 if __name__ == "__main__":
-    display_table("learning_resources")  # Change to your actual table name
+    display_table("users")  # Change to your actual table name

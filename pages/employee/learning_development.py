@@ -1,10 +1,11 @@
 import streamlit as st
 import sqlite3
+import pandas as pd
 
 # Function to load data from the learning_resources table
 def load_resources():
     conn = sqlite3.connect('app_database.db')
-    query = "SELECT id, resource_name, resource_type FROM learning_resources"
+    query = "SELECT id, resource_name, resource_type, resource_content, category, difficulty_level, author, url FROM learning_resources"
     resources = conn.execute(query).fetchall()
     conn.close()
     return resources
@@ -39,22 +40,37 @@ def learning_development():
     resources = load_resources()
 
     if resources:
-        # Create a form for tracking progress
-        with st.form(key='progress_form'):
-            selected_resource_id = st.selectbox("Select a resource to track progress", [r[0] for r in resources], format_func=lambda x: next(r[1] for r in resources if r[0] == x))
+        # Filter options
+        resource_types = list(set(r[2] for r in resources))  # Unique resource types
+        difficulty_levels = list(set(r[5] for r in resources))  # Unique difficulty levels
 
-            # Get the selected resource details
-            selected_resource = next(r for r in resources if r[0] == selected_resource_id)
-            st.write(f"You have selected: **{selected_resource[1]}** ({selected_resource[2]})")
+        selected_type = st.sidebar.multiselect("Filter by Resource Type", resource_types, default=resource_types)
+        selected_difficulty = st.sidebar.multiselect("Filter by Difficulty Level", difficulty_levels, default=difficulty_levels)
 
-            # Progress slider
-            progress_value = st.slider("Set progress for this resource:", 0, 100, 50)  # Default to 50%
+        # Filter resources based on selection
+        filtered_resources = [r for r in resources if r[2] in selected_type and r[5] in selected_difficulty]
 
-            # Submit button
-            submit_button = st.form_submit_button("Track Progress")
-            if submit_button:
-                track_progress(user_id, selected_resource_id, progress_value)
-                st.success(f"Progress for '{selected_resource[1]}' tracked successfully at {progress_value}%!")
+        # Display resources in a more interactive format
+        for resource in filtered_resources:
+            resource_id, name, resource_type, content, category, difficulty, author, url = resource
+            with st.expander(name, expanded=False):
+                st.write(f"**Type:** {resource_type}")
+                st.write(f"**Category:** {category}")
+                st.write(f"**Difficulty Level:** {difficulty}")
+                st.write(f"**Author:** {author}")
+                st.write(f"**Description:** {content}")
+
+                if url:
+                    st.markdown(f"[Link to Resource]({url})", unsafe_allow_html=True)
+
+                # Progress tracking section
+                progress_value = st.slider("Set progress for this resource:", 0, 100, 50, key=f'progress_slider_{resource_id}')  # Default to 50%
+
+                # Button to track progress
+                if st.button("Track Progress", key=f'track_progress_{resource_id}'):
+                    track_progress(user_id, resource_id, progress_value)
+                    st.success(f"Progress for '{name}' tracked successfully at {progress_value}%!")
+
     else:
         st.warning("No resources available at the moment.")
 

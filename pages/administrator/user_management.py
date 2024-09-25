@@ -6,18 +6,6 @@ import sqlite3
 def create_connection():
     return sqlite3.connect('app_database.db')
 
-def add_user(username, password, role):
-    conn = create_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute('INSERT INTO users (username, password, role) VALUES (?, ?, ?)', (username, password, role))
-        conn.commit()
-        return True
-    except sqlite3.IntegrityError:
-        return False
-    finally:
-        conn.close()
-
 def load_users():
     conn = create_connection()
     users_df = pd.read_sql_query('SELECT username, role FROM users', conn)
@@ -68,23 +56,10 @@ def show_user_management_page():
     usernames = users_df['username'].tolist()
 
     # Display all forms in columns
-    col1, col2, col3 = st.columns([1, 1, 1])
+    col2, col3 = st.columns([1, 1])
 
-    # Form to Add New User
-    with col1:
-        st.subheader("Add New User")
-        with st.form(key='add_user_form'):
-            new_username = st.text_input("Username", key='new_username')
-            new_password = st.text_input("Password", type="password", key='new_password')
-            role = st.selectbox("Role", ["Administrator", "Trainer", "Employee"], key='role')
-            submit_button = st.form_submit_button(label='Add User')
-
-            if submit_button:
-                if add_user(new_username, new_password, role):
-                    st.success("User added successfully.")
-                    st.rerun()  # Refresh the page after successful add
-                else:
-                    st.error("User already exists or could not be added.")
+    # Remove the Form to Add New User
+    # The functionality to add a user is removed
 
     # Form to Edit User
     with col2:
@@ -101,7 +76,9 @@ def show_user_management_page():
                     # Pre-fill with current user data
                     with st.form(key='edit_user_form'):
                         new_password = st.text_input("New Password (Leave blank to keep current)", type="password", value="", key='new_password_edit')
-                        new_role = st.selectbox("New Role", ["Administrator", "Trainer", "Employee"], index=["Administrator", "Trainer", "Employee"].index(current_role), key='new_role_edit')
+                        new_role = st.selectbox("New Role", ["Administrator", "Trainer", "Employee"], 
+                                                index=["Administrator", "Trainer", "Employee"].index(current_role), 
+                                                key='new_role_edit')
                         submit_button = st.form_submit_button(label='Update User')
 
                         if submit_button:

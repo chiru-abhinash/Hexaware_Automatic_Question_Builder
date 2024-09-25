@@ -1,4 +1,3 @@
-# pages/administrator/report_generation.py
 import streamlit as st
 import pandas as pd
 from io import BytesIO
@@ -11,7 +10,7 @@ def generate_report_data(report_type, start_date, end_date):
     """Fetch data from the database based on report type and date range."""
     if report_type == "User Activity":
         query = """
-        SELECT username, activity, timestamp
+        SELECT username, action, timestamp
         FROM user_activity
         WHERE timestamp BETWEEN ? AND ?
         """
@@ -29,7 +28,7 @@ def generate_report_data(report_type, start_date, end_date):
 
     elif report_type == "Error Logs":
         query = """
-        SELECT error_message, timestamp
+        SELECT message, timestamp
         FROM error_logs
         WHERE timestamp BETWEEN ? AND ?
         """

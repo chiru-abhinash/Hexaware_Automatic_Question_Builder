@@ -100,18 +100,18 @@ def create_tables():
         # Notifications table
         conn.execute('''
             CREATE TABLE IF NOT EXISTS notifications (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER,  -- Receiver
-            sender_id INTEGER,  -- Sender (optional)
-            notification_text TEXT NOT NULL,
-            notification_type TEXT,  -- Type of notification (optional)
-            priority INTEGER DEFAULT 0,  -- Priority or urgency (optional)
-            is_read BOOLEAN DEFAULT FALSE,
-            sent_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            valid_until DATETIME,  -- Expiration date (optional)
-            FOREIGN KEY (user_id) REFERENCES users(id),
-            FOREIGN KEY (sender_id) REFERENCES users(id)
-);
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,  -- Receiver
+                sender_id INTEGER,  -- Sender (optional)
+                notification_text TEXT NOT NULL,
+                notification_type TEXT,  -- Type of notification (optional)
+                priority INTEGER DEFAULT 0,  -- Priority or urgency (optional)
+                is_read BOOLEAN DEFAULT FALSE,
+                sent_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                valid_until DATETIME,  -- Expiration date (optional)
+                FOREIGN KEY (user_id) REFERENCES users(id),
+                FOREIGN KEY (sender_id) REFERENCES users(id)
+            );
         ''')
 
         # Issue resolution table
@@ -177,7 +177,67 @@ def create_tables():
             UNIQUE (user_id, resource_id)  -- Unique constraint
         );
         ''')
+
+
+            # Create error_logs table
+        conn.execute('''
+        CREATE TABLE IF NOT EXISTS error_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            message TEXT NOT NULL
+        )
+        ''')
+    
+        # Create user_activity_logs table
+        conn.execute('''
+        CREATE TABLE IF NOT EXISTS user_activity_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            username TEXT NOT NULL,
+            action TEXT NOT NULL
+        )
+        ''')
+    
+        # Create alerts table
+        conn.execute('''
+        CREATE TABLE IF NOT EXISTS alerts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            message TEXT NOT NULL,
+            active INTEGER DEFAULT 1
+        )
+        ''')
+
+        conn.execute('''
+        CREATE TABLE IF NOT EXISTS user_activity (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            username TEXT NOT NULL,
+            action TEXT NOT NULL
+        );
+        ''')
+
+        # Create error_logs table
+        conn.execute('''
+        CREATE TABLE IF NOT EXISTS error_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            message TEXT NOT NULL
+        )
+        ''')
+
+        # Create system_performance table
+        conn.execute('''
+        CREATE TABLE IF NOT EXISTS system_performance (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            cpu_usage REAL,
+            memory_usage REAL
+        )
+        ''')
             
+
+
 
         conn.commit()
         print("Tables created successfully.")

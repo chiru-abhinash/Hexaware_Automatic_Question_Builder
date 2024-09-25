@@ -6,6 +6,7 @@ from pages.administrator.system_monitoring import show_system_monitoring_page
 from pages.administrator.report_generation import show_report_generation_page
 from pages.administrator.settings import show_settings_page
 from pages.administrator.issue_resolution import show_issue_resolution_page
+from pages.administrator.add_user import show_add_user_page  # Importing the add_user function
 
 def logout():
     """Handle user logout and redirect to the login page."""
@@ -28,6 +29,7 @@ def show_admin_dashboard():
     # Create a dictionary to map buttons to their corresponding pages
     pages = {
         "User Management": "user_management",
+        "Add User": "add_user",  # Link to Add User page
         "System Monitoring": "system_monitoring",
         "Report Generation": "report_generation",
         "Settings": "settings",
@@ -56,6 +58,8 @@ def show_admin_dashboard():
     if 'page' in st.session_state:
         if st.session_state.page == "user_management":
             show_user_management_page()
+        elif st.session_state.page == "add_user":
+            show_add_user_page()  # Call the function to display the add user page
         elif st.session_state.page == "system_monitoring":
             show_system_monitoring_page()
         elif st.session_state.page == "report_generation":
@@ -65,7 +69,7 @@ def show_admin_dashboard():
         elif st.session_state.page == "issue_resolution":
             show_issue_resolution_page()
         elif st.session_state.page == "notifications":
-            show_notifications_page()
+            show_notifications_page()  # Ensure notifications page is handled
 
 if __name__ == "__main__":
     show_admin_dashboard()

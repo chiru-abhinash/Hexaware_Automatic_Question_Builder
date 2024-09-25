@@ -5,6 +5,7 @@ import io
 import google.generativeai as genai
 import random
 from utils.notifications import show_notifications_page
+import re  # For more dynamic question parsing
 
 # Initialize Google Gemini API
 genai.configure(api_key="AIzaSyBhbAu6Fc2v7D92eR5NnxzfCosLEv59Y_Y")  # Replace with your actual API key
@@ -66,9 +67,12 @@ def generate_questions(technology, topics, num_questions, difficulty_level):
         questions = []
         current_question = {}
 
+        # Regular expression to match question numbers
+        question_regex = re.compile(r'^\d+\.')
+
         # Parsing the generated questions
         for line in questions_data:
-            if line.startswith(('1.', '2.', '3.', '4.', '5.')):
+            if question_regex.match(line):  # Dynamically match any number starting with "1.", "2.", "3." etc.
                 if current_question:
                     questions.append(current_question)
 

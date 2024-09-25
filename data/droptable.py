@@ -6,7 +6,7 @@ def drop_learning_resources_table():
     cursor = conn.cursor()
 
     # Drop the table if it exists
-    cursor.execute('DROP TABLE IF EXISTS learning_progress')
+    cursor.execute('DROP TABLE IF EXISTS user_activity_logs')
 
     conn.commit()
     conn.close()

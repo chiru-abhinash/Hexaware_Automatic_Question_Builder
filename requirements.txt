@@ -8,3 +8,4 @@ fpdf
 reportlab
 psutil
 xlsxwriter
+google-generative-ai

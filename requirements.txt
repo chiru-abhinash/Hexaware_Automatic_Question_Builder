@@ -9,3 +9,4 @@ reportlab
 psutil
 xlsxwriter
 google-generativeai
+sendgrid

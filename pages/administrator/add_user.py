@@ -9,13 +9,14 @@ def create_connection():
     except Exception as e:
         st.error(f"Error connecting to database: {e}")
 
-def add_user(username, password, role):
+def add_user(username, password, role, firstname, lastname, email):
     conn = create_connection()
     cursor = conn.cursor()
     try:
         # Only add the user if username is not empty
         if username.strip():
-            cursor.execute('INSERT INTO users (username, password, role) VALUES (?, ?, ?)', (username, password, role))
+            cursor.execute('INSERT INTO users (username, password, role, firstname, lastname, email) VALUES (?, ?, ?, ?, ?, ?)', 
+                           (username, password, role, firstname, lastname, email))
             conn.commit()
             return True
         else:
@@ -46,7 +47,11 @@ def show_add_user_page():
     with st.form(key='add_user_form'):
         new_username = st.text_input("Username", value=st.session_state.new_username)
         new_password = st.text_input("Password", type="password", value=st.session_state.new_password)
-        role = st.selectbox("Role", ["Administrator", "Trainer", "Employee"], index=["Administrator", "Trainer", "Employee"].index(st.session_state.role))
+        firstname = st.text_input("First Name", value=st.session_state.get('new_firstname', ''))
+        lastname = st.text_input("Last Name", value=st.session_state.get('new_lastname', ''))
+        email = st.text_input("Email", value=st.session_state.get('new_email', ''))
+        role = st.selectbox("Role", ["Administrator", "Trainer", "Employee"], 
+                            index=["Administrator", "Trainer", "Employee"].index(st.session_state.role))
         
         # Submit button inside the form
         submit_button = st.form_submit_button(label='Add User')
@@ -55,13 +60,19 @@ def show_add_user_page():
             # Store the values in session state for persistence
             st.session_state.new_username = new_username
             st.session_state.new_password = new_password
+            st.session_state.new_firstname = firstname
+            st.session_state.new_lastname = lastname
+            st.session_state.new_email = email
             st.session_state.role = role
             
-            if add_user(new_username, new_password, role):
+            if add_user(new_username, new_password, role, firstname, lastname, email):
                 st.success("User added successfully.")
                 # Clear the input fields
                 st.session_state.new_username = ''
                 st.session_state.new_password = ''
+                st.session_state.new_firstname = ''
+                st.session_state.new_lastname = ''
+                st.session_state.new_email = ''
                 st.session_state.role = 'Administrator'  # Reset to default role
                 # Optionally, display the updated user list
                 display_users()
@@ -71,14 +82,14 @@ def show_add_user_page():
 def display_users():
     conn = create_connection()
     cursor = conn.cursor()
-    cursor.execute('SELECT username, role FROM users')
+    cursor.execute('SELECT username, role, firstname, lastname, email FROM users')
     users = cursor.fetchall()
     conn.close()
     
     if users:
         st.subheader("Current Users")
-        for username, role in users:
-            st.write(f"Username: {username}, Role: {role}")
+        for username, role, firstname, lastname, email in users:
+            st.write(f"Username: {username}, Role: {role}, First Name: {firstname}, Last Name: {lastname}, Email: {email}")
     else:
         st.write("No users found.")
 

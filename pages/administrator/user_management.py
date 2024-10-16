@@ -8,29 +8,52 @@ def create_connection():
 
 def load_users():
     conn = create_connection()
-    users_df = pd.read_sql_query('SELECT username, role FROM users', conn)
+    # Include first name, last name, and email in the user selection
+    users_df = pd.read_sql_query('SELECT username, firstname, lastname, email, role FROM users', conn)
     conn.close()
     return users_df
 
 def get_user_details(username):
     conn = create_connection()
     cursor = conn.cursor()
-    cursor.execute('SELECT password, role FROM users WHERE username = ?', (username,))
+    # Fetch additional fields (first_name, last_name, email) for the selected user
+    cursor.execute('SELECT password, role, firstname, lastname, email FROM users WHERE username = ?', (username,))
     user_data = cursor.fetchone()
     conn.close()
     return user_data
 
-def edit_user(username, new_password=None, new_role=None):
+def edit_user(username, new_password=None, new_role=None, new_first_name=None, new_last_name=None, new_email=None):
     conn = create_connection()
     cursor = conn.cursor()
     try:
+        # Build the update statement dynamically based on provided fields
+        updates = []
+        params = []
+
         if new_password:
-            cursor.execute('UPDATE users SET password = ? WHERE username = ?', (new_password, username))
+            updates.append('password = ?')
+            params.append(new_password)
         if new_role:
-            cursor.execute('UPDATE users SET role = ? WHERE username = ?', (new_role, username))
+            updates.append('role = ?')
+            params.append(new_role)
+        if new_first_name:
+            updates.append('firstname = ?')
+            params.append(new_first_name)
+        if new_last_name:
+            updates.append('lastname = ?')
+            params.append(new_last_name)
+        if new_email:
+            updates.append('email = ?')
+            params.append(new_email)
+
+        params.append(username)  # Append username for the WHERE clause
+
+        if updates:
+            cursor.execute(f'UPDATE users SET {", ".join(updates)} WHERE username = ?', params)
         conn.commit()
         return True
     except Exception as e:
+        st.error(f"Error updating user: {e}")
         return False
     finally:
         conn.close()
@@ -43,6 +66,7 @@ def delete_user(username):
         conn.commit()
         return cursor.rowcount > 0
     except Exception as e:
+        st.error(f"Error deleting user: {e}")
         return False
     finally:
         conn.close()
@@ -58,9 +82,6 @@ def show_user_management_page():
     # Display all forms in columns
     col2, col3 = st.columns([1, 1])
 
-    # Remove the Form to Add New User
-    # The functionality to add a user is removed
-
     # Form to Edit User
     with col2:
         st.subheader("Edit User")
@@ -71,7 +92,7 @@ def show_user_management_page():
                 # Load the current details of the selected user
                 user_details = get_user_details(selected_user)
                 if user_details:
-                    current_password, current_role = user_details
+                    current_password, current_role, current_first_name, current_last_name, current_email = user_details
 
                     # Pre-fill with current user data
                     with st.form(key='edit_user_form'):
@@ -79,14 +100,21 @@ def show_user_management_page():
                         new_role = st.selectbox("New Role", ["Administrator", "Trainer", "Employee"], 
                                                 index=["Administrator", "Trainer", "Employee"].index(current_role), 
                                                 key='new_role_edit')
+                        new_first_name = st.text_input("First Name", value=current_first_name, key='first_name_edit')
+                        new_last_name = st.text_input("Last Name", value=current_last_name, key='last_name_edit')
+                        new_email = st.text_input("Email", value=current_email, key='email_edit')
+
                         submit_button = st.form_submit_button(label='Update User')
 
                         if submit_button:
                             # Only update fields that were modified
                             updated_password = new_password if new_password else None
                             updated_role = new_role if new_role != current_role else None
+                            updated_first_name = new_first_name if new_first_name != current_first_name else None
+                            updated_last_name = new_last_name if new_last_name != current_last_name else None
+                            updated_email = new_email if new_email != current_email else None
 
-                            if edit_user(selected_user, updated_password, updated_role):
+                            if edit_user(selected_user, updated_password, updated_role, updated_first_name, updated_last_name, updated_email):
                                 st.success("User updated successfully.")
                                 st.rerun()  # Refresh the page after successful edit
                             else:

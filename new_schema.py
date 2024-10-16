@@ -25,7 +25,10 @@ def create_tables():
                 username TEXT NOT NULL UNIQUE,
                 password TEXT NOT NULL,
                 role TEXT NOT NULL,  -- Admin, Trainer, Employee
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                firstname TEXT NOT NULL DEFAULT,
+                lastname TEXT NOT NULL DEFAULT,
+                email TEXT NOT NULL DEFAULT          
             )
         ''')
 
@@ -233,6 +236,17 @@ def create_tables():
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
             cpu_usage REAL,
             memory_usage REAL
+        )
+        ''')
+
+        # Create the password_reset_tokens table
+        conn.execute('''
+        CREATE TABLE IF NOT EXISTS password_reset_tokens (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            reset_token TEXT NOT NULL,
+            expires_at DATETIME NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES users(id)
         )
         ''')
             

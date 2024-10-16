@@ -16,6 +16,21 @@ def load_question_banks():
     conn.close()
     return df
 
+def load_user_details(username):
+    """Load user details from the database based on the username."""
+    conn = sqlite3.connect('app_database.db')
+    query = "SELECT firstname, lastname FROM users WHERE username = ?"
+    cursor = conn.cursor()
+    cursor.execute(query, (username,))
+    user = cursor.fetchone()
+    conn.close()
+    
+    if user:
+        st.session_state['firstname'] = user[0]
+        st.session_state['lastname'] = user[1]
+    else:
+        st.error("User not found.")
+
 def parse_question_data(questions, options):
     """Parse questions and options into lists."""
     questions_list = questions.split(':::')
@@ -116,14 +131,21 @@ def create_pdf_certificate(name, course_name, score, total_questions):
 
 def self_assessment():
     st.title("Self-Assessment")
+
+    # Assuming the username is stored in session state after user login
+    if 'username' not in st.session_state:
+        st.error("Please log in to access the self-assessment.")
+        return
     
+    # Load user details from the database
+    load_user_details(st.session_state['username'])
+
     df = load_question_banks()
     selected_row = st.selectbox("Select Question Bank", df.index)
     
     if selected_row is not None:
         row = df.iloc[selected_row]
         
-        # Parse questions and options
         parsed_data = parse_question_data(row['questions'], row['options'])
         
         for i, q in enumerate(parsed_data):
@@ -131,15 +153,15 @@ def self_assessment():
             if q['options']:
                 answer = st.selectbox(f"Select your answer for Q{i+1}", q['options'], key=f'answer_{i}')
         
-        # Submit button to evaluate answers
         if st.button("Submit"):
             score, total_questions = evaluate_answers(parsed_data)
             certificate_message = generate_certificate(score, total_questions)
             st.write(certificate_message)
             
-            # Check if user scored 70% or higher to generate a certificate
             if score / total_questions >= 0.7:
-                pdf_buffer = create_pdf_certificate("Abhinash", row['technology'] + " - " + row['topic'], score, total_questions)
+                # Combine the user's first name and last name
+                full_name = f"{st.session_state.get('firstname', '')} {st.session_state.get('lastname', '')}"
+                pdf_buffer = create_pdf_certificate(full_name, row['technology'] + " - " + row['topic'], score, total_questions)
                 st.download_button(
                     label="Download Certificate",
                     data=pdf_buffer,
@@ -148,6 +170,7 @@ def self_assessment():
                 )
             else:
                 st.write("You need at least 70% to receive a certificate.")
+
 
 def show_review_edit_question_bank_page():
     st.title("Review and Edit Question Bank")

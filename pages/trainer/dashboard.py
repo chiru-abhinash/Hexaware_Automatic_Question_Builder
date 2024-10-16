@@ -25,12 +25,15 @@ def show_trainer_dashboard():
     if st.button("Feedback"):
         st.session_state.page = "feedback"
     
+    # Logout button logic
     if st.button("Logout"):
+        # Clear session state
         st.session_state.authenticated = False
         st.session_state.role = None
         st.session_state.username = ''
         st.session_state.user_id = None  # Clear user ID
-        st.session_state.page = "login"
+        st.session_state.page = "login"  # Set the page to login
+        st.rerun()  # Refresh to redirect to login page
 
     # Load the correct page based on session state
     if 'page' in st.session_state:
@@ -44,7 +47,6 @@ def show_trainer_dashboard():
             show_download_question_bank_page()
         elif st.session_state.page == "feedback":
             show_feedback_page()
-
 
 if __name__ == "__main__":
     show_trainer_dashboard()

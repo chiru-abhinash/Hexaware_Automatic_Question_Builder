@@ -6,7 +6,6 @@ from pages.employee.self_assessment import self_assessment
 from pages.employee.submit_feedback import submit_feedback
 from pages.employee.learning_development import learning_development
 from pages.employee.request_learning_plan import request_learning_plan
-from pages.employee.logout import logout
 
 def show_employee_dashboard():
     st.title("Employee Dashboard")
@@ -36,11 +35,15 @@ def show_employee_dashboard():
     if st.button(notification_button_text):
         st.session_state.page = "notifications"  # Redirect to notifications page
 
+    # Logout button logic
     if st.button("Logout"):
+        # Clear session state
         st.session_state.authenticated = False
         st.session_state.role = None
         st.session_state.username = ''
-        st.session_state.page = "login"
+        st.session_state.user_id = None  # Clear user ID
+        st.session_state.page = "login"  # Set the page to login
+        st.rerun()  # Refresh to redirect to login page
 
     # Check and load the correct page
     if 'page' in st.session_state:
@@ -54,8 +57,6 @@ def show_employee_dashboard():
             learning_development()
         elif st.session_state.page == "request_learning_plan":
             request_learning_plan()
-        elif st.session_state.page == "logout":
-            logout()
         elif st.session_state.page == "notifications":
             # Load the notifications page here
             from pages.employee.notifications import show_notifications_page

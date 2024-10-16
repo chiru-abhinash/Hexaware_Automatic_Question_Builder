@@ -3,11 +3,16 @@ import uuid
 from datetime import datetime, timedelta
 import requests
 import hashlib
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file
+load_dotenv()
 
 def send_email(to_email, subject, body):
-    # Set up your Mailgun API credentials
-    mailgun_domain = 'sandboxf82d6f6157164603a7eb52ceda0746b3.mailgun.org'  # Replace with your Mailgun domain
-    mailgun_api_key = '06dfccd9b2f3192d79e47b7ff050125b-d010bdaf-4d16be3d'  # Replace with your Mailgun API key
+    # Set up your Mailgun API credentials from environment variables
+    mailgun_domain = os.getenv('MAILGUN_DOMAIN')  # Load Mailgun domain from .env
+    mailgun_api_key = os.getenv('MAILGUN_API_KEY')  # Load Mailgun API key from .env
 
     # Mailgun API URL for sending emails
     url = f'https://api.mailgun.net/v3/{mailgun_domain}/messages'
@@ -38,10 +43,7 @@ def generate_password_reset_token(user_id):
         expires_at = datetime.now() + timedelta(hours=1)
 
         # Insert the token into the database
-        cursor.execute('''
-            INSERT INTO password_reset_tokens (user_id, reset_token, expires_at)
-            VALUES (?, ?, ?)
-        ''', (user_id, reset_token, expires_at))
+        cursor.execute('''INSERT INTO password_reset_tokens (user_id, reset_token, expires_at) VALUES (?, ?, ?)''', (user_id, reset_token, expires_at))
 
         conn.commit()
     except sqlite3.Error as e:
@@ -57,10 +59,7 @@ def reset_password(user_id, token, new_password):
         cursor = conn.cursor()
 
         # Validate the token and ensure it hasn't expired
-        cursor.execute('''
-            SELECT id FROM password_reset_tokens 
-            WHERE user_id = ? AND reset_token = ? AND expires_at > ?
-        ''', (user_id, token, datetime.now()))
+        cursor.execute('''SELECT id FROM password_reset_tokens WHERE user_id = ? AND reset_token = ? AND expires_at > ?''', (user_id, token, datetime.now()))
         
         result = cursor.fetchone()
 

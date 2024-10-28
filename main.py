@@ -187,12 +187,12 @@ def main():
         elif st.session_state.current_page == 'forgot_password':
             if st.button("Back to Login"):
                 st.session_state.current_page = 'login'
-                st.experimental_rerun()  # Use experimental rerun to refresh the app state
+                st.rerun()  # Use experimental rerun to refresh the app state
             show_forget_password_page()
         elif st.session_state.current_page == 'reset_password':
             if st.button("Back to Login"):
                 st.session_state.current_page = 'login'
-                st.experimental_rerun()  # Use experimental rerun to refresh the app state
+                st.rerun()  # Use experimental rerun to refresh the app state
             show_reset_password_page()
         else:
             show_login_page()

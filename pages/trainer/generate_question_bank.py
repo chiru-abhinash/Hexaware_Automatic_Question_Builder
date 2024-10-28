@@ -9,8 +9,8 @@ import re  # For more dynamic question parsing
 from dotenv import load_dotenv  # type: ignore # Import dotenv
 import os
 # Initialize Google Gemini API
-#genai.configure(api_key="")  # Replace with your actual API key
-
+genai.configure(api_key="")  # Replace with your actual API key
+'''
 # Load environment variables
 load_dotenv()
 
@@ -20,7 +20,7 @@ if api_key:
     genai.configure(api_key=api_key)
 else:
     st.error("API key not found. Please check your .env file.")
-
+'''
 
 
 

@@ -9,7 +9,7 @@ import re  # For more dynamic question parsing
 from dotenv import load_dotenv  # type: ignore # Import dotenv
 import os
 # Initialize Google Gemini API
-genai.configure(api_key="")  # Replace with your actual API key
+genai.configure(api_key="AIzaSyBhbAu6Fc2v7D92eR5NnxzfCosLEv59Y_Y")  # Replace with your actual API key
 '''
 # Load environment variables
 load_dotenv()

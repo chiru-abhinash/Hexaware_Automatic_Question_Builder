@@ -1,3 +1,10 @@
-Issue ID,Description,Status,Comments
-1,Example issue 1,Assigned to Support,resolved
-2,Example issue 2,Resolved,done
+id,reported_by,issue_description,resolution_status,resolution_notes,created_at,resolved_at
+1,8,i have problem while generating question bank,Resolved,Test notes,2024-09-22 05:26:23,2024-09-22 05:58:32
+2,8,This is feedback from trainer.,Pending,,2024-09-22 06:01:05,
+3,8,This is feedback from admin.,Pending,,2024-09-22 06:39:00,
+4,8,Error in logout,Pending,,2024-09-23 05:00:55,
+5,8,i have problem while generating question bank,Resolved,resolved bu eid 6,2024-09-23 05:02:12,2024-10-27 09:01:31
+6,8,Error in logout,Resolved,Solved,2024-09-23 07:19:22,2024-10-26 07:39:42
+7,8,error in question bank,Resolved,tested and resolved,2024-10-26 07:33:55,2024-10-27 15:10:45
+8,40,need enhanced ui,Pending,,2024-10-27 15:18:41.410732,
+9,10,certificate not generating,Resolved,Certificate generation is fixed,2024-10-28 13:22:38.712609,2024-10-28 15:55:44

@@ -11,6 +11,56 @@ def get_db_connection():
         print(f"Database connection error: {e}")
         return None
 
+
+
+# Utility function for executing insert or update queries
+def execute_query(query, params=()):
+    conn = get_db_connection()
+    if not conn:
+        return False
+    try:
+        cursor = conn.cursor()
+        cursor.execute(query, params)
+        conn.commit()  # Ensure changes are committed to the database
+        return True
+    except sqlite3.Error as e:
+        print(f"SQL error: {e}")
+        return False
+    finally:
+        conn.close()
+
+# Utility function for fetching a single row
+def fetch_one(query, params=()):
+    conn = get_db_connection()
+    if not conn:
+        return None
+    try:
+        result = conn.execute(query, params).fetchone()
+        return result
+    except sqlite3.Error as e:
+        print(f"SQL fetch error: {e}")
+        return None
+    finally:
+        conn.close()
+
+# Utility function for fetching multiple rows
+def fetch_all(query, params=()):
+    conn = get_db_connection()
+    if not conn:
+        return []
+    try:
+        result = conn.execute(query, params).fetchall()
+        return result
+    except sqlite3.Error as e:
+        print(f"SQL fetch error: {e}")
+        return []
+    finally:
+        conn.close()
+
+
+'''
+
+
 # Utility function for executing insert or update queries
 def execute_query(query, params=()):
     conn = get_db_connection()
@@ -53,6 +103,8 @@ def fetch_all(query, params=()):
         return []
     finally:
         conn.close()
+
+'''        
 
 # Add a new user
 def add_user(username, password, role):
@@ -115,3 +167,13 @@ def insert_notification(user_id, notification_text):
 # Get notifications for a user
 def get_notifications_for_user(user_id):
     return fetch_all('SELECT * FROM notifications WHERE user_id = ?', (user_id,))
+
+
+def insert_user_activity(query, params):
+    """Insert a user activity log into the database."""
+    conn = get_db_connection()
+    try:
+        conn.execute(query, params)
+        conn.commit()
+    finally:
+        conn.close()

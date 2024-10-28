@@ -1,6 +1,5 @@
 import streamlit as st
 import sqlite3
-import pandas as pd
 
 # Function to load data from the learning_resources table
 def load_resources():
@@ -17,13 +16,26 @@ def track_progress(user_id, resource_id, progress_value):
     query = '''
         INSERT INTO learning_progress (user_id, resource_id, progress, updated_at)
         VALUES (?, ?, ?, CURRENT_TIMESTAMP)
-        ON CONFLICT(user_id, resource_id) DO UPDATE SET 
-            progress=excluded.progress, 
+        ON CONFLICT(user_id, resource_id) DO UPDATE SET
+            progress=excluded.progress,
             updated_at=CURRENT_TIMESTAMP;
     '''
     cursor.execute(query, (user_id, resource_id, progress_value))
     conn.commit()
     conn.close()
+
+# Function to load user progress from the database
+def load_user_progress(user_id):
+    conn = sqlite3.connect('app_database.db')
+    query = '''
+        SELECT lr.resource_name, lp.progress, lr.resource_type, lr.category 
+        FROM learning_progress lp
+        JOIN learning_resources lr ON lp.resource_id = lr.id
+        WHERE lp.user_id = ?
+    '''
+    progress = conn.execute(query, (user_id,)).fetchall()
+    conn.close()
+    return progress
 
 # Main function for the Learning and Development page
 def learning_development():
@@ -31,27 +43,16 @@ def learning_development():
 
     # Retrieve user ID from session state
     user_id = st.session_state.get('user_id')
-
     if user_id is None:
         st.error("User not logged in. Please log in to access resources.")
         return
 
     # Load resources from the database
     resources = load_resources()
-
     if resources:
-        # Filter options
-        resource_types = list(set(r[2] for r in resources))  # Unique resource types
-        difficulty_levels = list(set(r[5] for r in resources))  # Unique difficulty levels
-
-        selected_type = st.sidebar.multiselect("Filter by Resource Type", resource_types, default=resource_types)
-        selected_difficulty = st.sidebar.multiselect("Filter by Difficulty Level", difficulty_levels, default=difficulty_levels)
-
-        # Filter resources based on selection
-        filtered_resources = [r for r in resources if r[2] in selected_type and r[5] in selected_difficulty]
-
+        st.subheader("Learning Resources")
         # Display resources in a more interactive format
-        for resource in filtered_resources:
+        for resource in resources:
             resource_id, name, resource_type, content, category, difficulty, author, url = resource
             with st.expander(name, expanded=False):
                 st.write(f"**Type:** {resource_type}")
@@ -59,20 +60,17 @@ def learning_development():
                 st.write(f"**Difficulty Level:** {difficulty}")
                 st.write(f"**Author:** {author}")
                 st.write(f"**Description:** {content}")
-
                 if url:
                     st.markdown(f"[Link to Resource]({url})", unsafe_allow_html=True)
 
-                # Progress tracking section
-                progress_value = st.slider("Set progress for this resource:", 0, 100, 50, key=f'progress_slider_{resource_id}')  # Default to 50%
-
-                # Button to track progress
-                if st.button("Track Progress", key=f'track_progress_{resource_id}'):
-                    track_progress(user_id, resource_id, progress_value)
-                    st.success(f"Progress for '{name}' tracked successfully at {progress_value}%!")
-
+    st.subheader("Your Progress")
+    user_progress = load_user_progress(user_id)
+    if user_progress:
+        for progress in user_progress:
+            resource_name, progress_value, resource_type, category = progress
+            st.write(f"**Resource:** {resource_name}, **Progress:** {progress_value}%, **Type:** {resource_type}, **Category:** {category}")
     else:
-        st.warning("No resources available at the moment.")
+        st.write("No progress tracked yet.")
 
 # Show the learning development dashboard
 if __name__ == "__main__":

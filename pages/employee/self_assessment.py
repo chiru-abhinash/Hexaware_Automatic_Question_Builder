@@ -31,6 +31,47 @@ def load_user_details(username):
     else:
         st.error("User not found.")
 
+# def parse_question_data(questions, options):
+#     """Parse questions and options into lists."""
+#     questions_list = questions.split(':::')
+#     options_list = options.split(':::')
+    
+#     parsed_data = []
+    
+#     for i, question in enumerate(questions_list):
+#         opts_with_correct = options_list[i].split(";;") if i < len(options_list) else []
+        
+#         if opts_with_correct:
+#             cleaned_options = [opt.strip() for opt in opts_with_correct]
+#             correct_option = cleaned_options[0] if cleaned_options else None
+            
+#             parsed_data.append({
+#                 'question': question.strip(),
+#                 'options': cleaned_options,
+#                 'correct_option': correct_option
+#             })
+#         else:
+#             st.warning(f"Warning: No options available for question {i + 1}.")
+#             parsed_data.append({
+#                 'question': question.strip(),
+#                 'options': [],
+#                 'correct_option': None
+#             })
+    
+#     return parsed_data
+
+# def evaluate_answers(parsed_data):
+#     """Evaluate the user's answers against the correct options."""
+#     score = 0
+#     total_questions = len(parsed_data)
+    
+#     for i, q in enumerate(parsed_data):
+#         user_answer = st.session_state.get(f'answer_{i}', None)
+#         if user_answer == q['correct_option']:
+#             score += 1
+
+#     return score, total_questions
+
 def parse_question_data(questions, options):
     """Parse questions and options into lists."""
     questions_list = questions.split(':::')
@@ -42,8 +83,9 @@ def parse_question_data(questions, options):
         opts_with_correct = options_list[i].split(";;") if i < len(options_list) else []
         
         if opts_with_correct:
-            cleaned_options = [opt.strip() for opt in opts_with_correct]
+            cleaned_options = [opt.strip() for opt in opts_with_correct]  # Keep labels
             correct_option = cleaned_options[0] if cleaned_options else None
+            cleaned_options.sort()  # Sort options alphabetically for display
             
             parsed_data.append({
                 'question': question.strip(),
@@ -60,17 +102,26 @@ def parse_question_data(questions, options):
     
     return parsed_data
 
+
+
 def evaluate_answers(parsed_data):
     """Evaluate the user's answers against the correct options."""
     score = 0
     total_questions = len(parsed_data)
-    
+
     for i, q in enumerate(parsed_data):
         user_answer = st.session_state.get(f'answer_{i}', None)
-        if user_answer == q['correct_option']:
+        
+        # Compare user's answer text directly
+        if user_answer is not None and user_answer.strip() == q['correct_option'].strip():
             score += 1
 
     return score, total_questions
+
+
+
+
+
 
 def generate_certificate(score, total_questions):
     """Generate a message indicating the score."""
@@ -82,76 +133,116 @@ def create_pdf_certificate(name, course_name, score, total_questions):
     c = canvas.Canvas(buffer, pagesize=letter)
     width, height = letter
 
-    # Set background color and borders
-    c.setFillColor(colors.lightblue)
-    c.rect(0, 0, width, height, fill=True, stroke=False)
+    # Add a border
+    c.setStrokeColorRGB(0, 0, 0)
+    c.setLineWidth(4)
+    c.rect(40, 40, width - 80, height - 80)
 
-    # Certificate title
-    c.setFillColor(colors.darkblue)
-    c.setFont("Helvetica-Bold", 24)
+    # Add a title
+    c.setFont("Helvetica-Bold", 28)
+    c.setFillColorRGB(0.2, 0.4, 0.6)
     c.drawCentredString(width / 2.0, height - 100, "Certificate of Completion")
 
-    # Body of the certificate
+    # Add the body of the certificate
     c.setFont("Helvetica", 16)
-    c.setFillColor(colors.black)
-    c.drawCentredString(width / 2.0, height - 150, f"This is to certify that")
-    
-    # Issued to
-    c.setFont("Helvetica-Bold", 18)
+    c.setFillColorRGB(0, 0, 0)
+    c.drawCentredString(width / 2.0, height - 150, "This is to certify that")
+
+    # Add the recipient's name
+    c.setFont("Helvetica-Bold", 20)
     c.drawCentredString(width / 2.0, height - 180, name)
 
-    # Course name and score details
+    # Add course name and details
     c.setFont("Helvetica", 16)
-    c.drawCentredString(width / 2.0, height - 220, f"has successfully completed the course:")
+    c.drawCentredString(width / 2.0, height - 220, "has successfully completed the course")
+    
     c.setFont("Helvetica-Bold", 18)
     c.drawCentredString(width / 2.0, height - 250, course_name)
-    
+
+    # Add score and total questions
     c.setFont("Helvetica", 16)
     c.drawCentredString(width / 2.0, height - 290, f"with a score of {score} out of {total_questions}.")
-    
-    # Date issued
+
+    # Add date issued
     issue_date = datetime.date.today().strftime("%B %d, %Y")
     c.drawCentredString(width / 2.0, height - 330, f"Issued on: {issue_date}")
 
-    # Signature placeholder
+    # Signature
     c.setFont("Helvetica", 14)
     c.drawString(width / 2.5, height - 420, "____________________________")
     c.drawString(width / 2.5, height - 440, "Authorized Signature")
-    
-    # Add a bottom border
+
+    # Bottom border
     c.setLineWidth(2)
     c.setStrokeColor(colors.darkblue)
     c.line(50, 50, width - 50, 50)
 
     # Save the PDF content
     c.save()
-    
     buffer.seek(0)
+    
     return buffer
+
+# def self_assessment():
+#     st.title("Self-Assessment")
+
+#     # Assuming the username is stored in session state after user login
+#     if 'username' not in st.session_state:
+#         st.error("Please log in to access the self-assessment.")
+#         return
+    
+#     # Load user details from the database
+#     load_user_details(st.session_state['username'])
+
+#     df = load_question_banks()
+#     selected_row = st.selectbox("Select Question Bank", df.index)
+    
+#     if selected_row is not None:
+#         row = df.iloc[selected_row]
+        
+#         parsed_data = parse_question_data(row['questions'], row['options'])
+        
+#         for i, q in enumerate(parsed_data):
+#             st.write(f"Q{i+1}: {q['question']}")
+#             if q['options']:
+#                 answer = st.selectbox(f"Select your answer for Q{i+1}", q['options'], key=f'answer_{i}')
+        
+#         if st.button("Submit"):
+#             score, total_questions = evaluate_answers(parsed_data)
+#             certificate_message = generate_certificate(score, total_questions)
+#             st.write(certificate_message)
+            
+#             if score / total_questions >= 0.7:
+#                 # Combine the user's first name and last name
+#                 full_name = f"{st.session_state.get('firstname', '')} {st.session_state.get('lastname', '')}"
+#                 pdf_buffer = create_pdf_certificate(full_name, row['technology'] + " - " + row['topic'], score, total_questions)
+#                 st.download_button(
+#                     label="Download Certificate",
+#                     data=pdf_buffer,
+#                     file_name="completion_certificate.pdf",
+#                     mime="application/pdf"
+#                 )
+#             else:
+#                 st.write("You need at least 70% to receive a certificate.")
 
 def self_assessment():
     st.title("Self-Assessment")
-
-    # Assuming the username is stored in session state after user login
     if 'username' not in st.session_state:
         st.error("Please log in to access the self-assessment.")
         return
     
-    # Load user details from the database
     load_user_details(st.session_state['username'])
-
     df = load_question_banks()
     selected_row = st.selectbox("Select Question Bank", df.index)
     
     if selected_row is not None:
         row = df.iloc[selected_row]
-        
         parsed_data = parse_question_data(row['questions'], row['options'])
         
         for i, q in enumerate(parsed_data):
             st.write(f"Q{i+1}: {q['question']}")
             if q['options']:
-                answer = st.selectbox(f"Select your answer for Q{i+1}", q['options'], key=f'answer_{i}')
+                user_answer = st.radio(f"Select your answer for Q{i+1}", q['options'], key=f'answer_{i}')
         
         if st.button("Submit"):
             score, total_questions = evaluate_answers(parsed_data)
@@ -159,7 +250,6 @@ def self_assessment():
             st.write(certificate_message)
             
             if score / total_questions >= 0.7:
-                # Combine the user's first name and last name
                 full_name = f"{st.session_state.get('firstname', '')} {st.session_state.get('lastname', '')}"
                 pdf_buffer = create_pdf_certificate(full_name, row['technology'] + " - " + row['topic'], score, total_questions)
                 st.download_button(
@@ -170,6 +260,37 @@ def self_assessment():
                 )
             else:
                 st.write("You need at least 70% to receive a certificate.")
+            # Track progress
+            user_id = st.session_state.get('user_id')  # Ensure 'user_id' is properly set
+            if user_id:
+                resource_id = row['id']  # Assuming `id` is the primary key in the question bank table
+                store_max_score(user_id, resource_id, score, total_questions)
+            else:
+                st.error("User ID not found. Please ensure you are logged in.")
+
+
+
+
+
+
+def store_max_score(user_id, resource_id, score, total_questions):
+    progress_value = (score / total_questions) * 100
+    conn = sqlite3.connect('app_database.db')
+    cursor = conn.cursor()
+    query = '''
+        INSERT INTO learning_progress (user_id, resource_id, progress, updated_at)
+        VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+        ON CONFLICT(user_id, resource_id) DO UPDATE SET
+            progress = MAX(learning_progress.progress, excluded.progress),
+            updated_at = CURRENT_TIMESTAMP;
+    '''
+    try:
+        cursor.execute(query, (user_id, resource_id, progress_value))
+        conn.commit()
+    except sqlite3.OperationalError as e:
+        st.error(f"Database operation failed: {e}")
+    finally:
+        conn.close()
 
 
 def show_review_edit_question_bank_page():

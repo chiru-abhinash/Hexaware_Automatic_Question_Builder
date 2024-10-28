@@ -113,7 +113,8 @@ def create_tables():
                 sent_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 valid_until DATETIME,  -- Expiration date (optional)
                 FOREIGN KEY (user_id) REFERENCES users(id),
-                FOREIGN KEY (sender_id) REFERENCES users(id)
+                FOREIGN KEY (sender_id) REFERENCES users(id),
+                receiver_id INTEGER NOT NULL DEFAULT 0
             );
         ''')
 

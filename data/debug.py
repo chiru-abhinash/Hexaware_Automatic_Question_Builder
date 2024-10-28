@@ -13,4 +13,4 @@ def test_update(issue_id, resolution_notes, resolution_status):
     cursor.close()
     conn.close()
 
-test_update(1, 'Test notes', 'Resolved')
+test_update(7, 'tested', 'Resolved')

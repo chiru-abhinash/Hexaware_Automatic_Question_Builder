@@ -3,7 +3,7 @@ import uuid
 from datetime import datetime, timedelta
 import requests
 import hashlib
-from dotenv import load_dotenv
+from dotenv import load_dotenv # type: ignore
 import os
 
 # Load environment variables from .env file

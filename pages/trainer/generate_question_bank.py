@@ -6,9 +6,23 @@ import google.generativeai as genai
 import random
 from utils.notifications import show_notifications_page
 import re  # For more dynamic question parsing
+from dotenv import load_dotenv  # type: ignore # Import dotenv
+import os
+# Initialize Google Gemini API
+#genai.configure(api_key="")  # Replace with your actual API key
+
+# Load environment variables
+load_dotenv()
 
 # Initialize Google Gemini API
-genai.configure(api_key="AIzaSyBhbAu6Fc2v7D92eR5NnxzfCosLEv59Y_Y")  # Replace with your actual API key
+api_key = os.getenv("GEMINI_API_KEY")
+if api_key:
+    genai.configure(api_key=api_key)
+else:
+    st.error("API key not found. Please check your .env file.")
+
+
+
 
 # Gemini model configuration
 generation_config = {
@@ -138,7 +152,9 @@ def show_generate_question_bank_page():
     trainer_id = 1  # This should be dynamic based on the logged-in trainer
     
     # Select technology
-    technology = st.selectbox("Select Technology", ["Python", "Java", "C++"])
+    technology = st.selectbox("Select Technology", ["Python", "Java", "C++"], key="technology_selectbox")
+
+    #technology = st.selectbox("Select Technology", ["Python", "Java", "C++"])
     all_topics = fetch_topics_from_database(technology)
     
     if not all_topics:

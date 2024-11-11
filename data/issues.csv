@@ -8,3 +8,5 @@ id,reported_by,issue_description,resolution_status,resolution_notes,created_at,r
 7,8,error in question bank,Resolved,tested and resolved,2024-10-26 07:33:55,2024-10-27 15:10:45
 8,40,need enhanced ui,Pending,,2024-10-27 15:18:41.410732,
 9,10,certificate not generating,Resolved,Certificate generation is fixed,2024-10-28 13:22:38.712609,2024-10-28 15:55:44
+10,10,page is reloading multiple times,Resolved,prioblem fixed,2024-10-28 18:40:51.168120,2024-10-28 18:41:33
+11,37,improve question quality,Resolved,informed to trainer,2024-11-04 13:12:07.642861,2024-11-04 13:12:38

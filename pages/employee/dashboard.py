@@ -64,7 +64,6 @@
 
 # if __name__ == "__main__":
 #     show_employee_dashboard()
-
 import streamlit as st
 from utils.notifications import get_unseen_notifications
 
@@ -83,9 +82,6 @@ def show_employee_dashboard():
     notifications = get_unseen_notifications(user_id)
     unread_count = len(notifications)
 
-    # Change button text based on unread notifications
-    notification_button_text = f"Notifications ({unread_count})"
-    
     # Add custom CSS to increase tab font size
     st.markdown(
         """
@@ -122,6 +118,8 @@ def show_employee_dashboard():
         request_learning_plan()
     
     with tab6:
+        # Notifications Tab Content
+        st.subheader(f"Notifications ({unread_count} new)")
         show_notifications_page()
 
     # Logout tab functionality

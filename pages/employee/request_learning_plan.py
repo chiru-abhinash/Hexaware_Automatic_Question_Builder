@@ -1,6 +1,6 @@
-# pages/employee/request_learning_plan.py
 import streamlit as st
 import sqlite3
+from utils.notifications import add_notification  # Assuming the notification function is imported
 
 def get_employee_id(username):
     conn = sqlite3.connect('app_database.db')
@@ -40,12 +40,17 @@ def request_learning_plan():
             conn = sqlite3.connect('app_database.db')
             cursor = conn.cursor()
             try:
+                # Insert the learning plan into the database
                 cursor.execute('''
                     INSERT INTO learning_plans (employee_id, technology, areas_of_improvement, learning_goals)
                     VALUES (?, ?, ?, ?)
                 ''', (st.session_state.employee_id, technology, areas_of_improvement, learning_goals))
                 conn.commit()
                 st.success("Learning plan requested successfully!")
+
+                # Create a notification for the employee
+                notification_text = "Your learning plan request has been submitted successfully."
+                add_notification(st.session_state.employee_id, st.session_state.employee_id, notification_text, "Acknowledgment")
 
                 # Generate and display the learning plan
                 learning_plan = generate_learning_plan(technology, areas_of_improvement, learning_goals)

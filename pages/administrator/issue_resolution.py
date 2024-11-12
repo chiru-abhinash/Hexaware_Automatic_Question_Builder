@@ -267,7 +267,6 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 from utils.database import fetch_all, execute_query, get_db_connection
-from datetime import datetime
 
 # Load issues from CSV
 def load_issues_from_csv():
@@ -280,7 +279,17 @@ def load_issues_from_csv():
 def save_issues_to_csv(df):
     df.to_csv('data/issues.csv', index=False)
 
-# Create an issue from feedback
+def load_feedback():
+    query = "SELECT * FROM feedback"
+    results = fetch_all(query)
+    
+    if results:
+        columns = [column[0] for column in get_db_connection().execute(query).description]
+        return pd.DataFrame(results, columns=columns)
+    return pd.DataFrame()
+
+
+
 # Create an issue from feedback
 def create_issue_from_feedback(user_id, issue_description):
     """Create a new issue in the CSV from feedback."""
@@ -311,7 +320,6 @@ def create_issue_from_feedback(user_id, issue_description):
     except Exception as e:
         st.error(f"Failed to create issue from feedback: {e}")
 
-
 # Update issue resolution
 def update_issue_in_csv(issue_id, resolution_notes, resolution_status):
     issues_df = load_issues_from_csv()
@@ -327,14 +335,18 @@ def update_issue_in_csv(issue_id, resolution_notes, resolution_status):
     st.success(f"Issue ID {issue_id} updated successfully.")
     st.session_state['issues_updated'] = True  # Mark as updated
 
-# Load feedback from the database
-def load_feedback():
-    query = "SELECT * FROM feedback"
-    results = fetch_all(query)
-    if results:
-        columns = [column[0] for column in get_db_connection().execute(query).description]
-        return pd.DataFrame(results, columns=columns)
-    return pd.DataFrame()
+# Delete issue
+def delete_issue_from_csv(issue_id):
+    issues_df = load_issues_from_csv()
+    if issue_id not in issues_df['id'].values:
+        st.error(f"No issue found with ID {issue_id}.")
+        return
+
+    # Remove the selected issue
+    issues_df = issues_df[issues_df['id'] != issue_id]
+    save_issues_to_csv(issues_df)
+    st.success(f"Issue ID {issue_id} deleted successfully.")
+    st.session_state['issues_updated'] = True  # Mark as updated
 
 # Main Issue Resolution Page
 def show_issue_resolution_page():
@@ -375,7 +387,7 @@ def show_issue_resolution_page():
     if issues_df.empty:
         st.warning("No issues found.")
     else:
-        selected_issue_id = st.selectbox("Select Issue to Edit", issues_df["id"])
+        selected_issue_id = st.selectbox("Select Issue to Edit or Delete", issues_df["id"])
         selected_issue = issues_df[issues_df["id"] == selected_issue_id]
 
         if not selected_issue.empty:
@@ -393,6 +405,10 @@ def show_issue_resolution_page():
             if st.button("Update Issue Resolution"):
                 st.write(f"Updating issue ID {issue_row['id']} with notes '{resolution_notes}' and status '{resolution_status}'")
                 update_issue_in_csv(issue_row['id'], resolution_notes, resolution_status)
+
+            # Delete Issue Button
+            if st.button(f"Delete Issue ID {issue_row['id']}"):
+                delete_issue_from_csv(issue_row['id'])
 
     if st.button("Refresh Issues"):
         st.write("Manual refresh triggered.")

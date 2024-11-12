@@ -225,51 +225,101 @@ def create_pdf_certificate(name, course_name, score, total_questions):
 #             else:
 #                 st.write("You need at least 70% to receive a certificate.")
 
+def send_notification(user_id, score, total_questions):
+    """Send a notification about the assessment score."""
+    # Create a message based on the score
+    message = f"Your assessment score is {score} out of {total_questions}."
+
+    # Store the notification in the database
+    conn = sqlite3.connect('app_database.db')
+    cursor = conn.cursor()
+    
+    # Update the query to match the correct column name ('notification_text' instead of 'message')
+    query = '''
+        INSERT INTO notifications (user_id, notification_text, sent_at)
+        VALUES (?, ?, CURRENT_TIMESTAMP)
+    '''
+    
+    try:
+        cursor.execute(query, (user_id, message))
+        conn.commit()
+        st.success("Notification sent successfully.")
+    except sqlite3.OperationalError as e:
+        st.error(f"Database operation failed: {e}")
+    finally:
+        conn.close()
+
 def self_assessment():
+    # Page Title
     st.title("Self-Assessment")
+
+    # Ensure the user is logged in
     if 'username' not in st.session_state:
         st.error("Please log in to access the self-assessment.")
-        return
-    
+        return  # Exit the function if not logged in
+
+    # Load user details based on the logged-in username
     load_user_details(st.session_state['username'])
+
+    # Load available question banks
     df = load_question_banks()
-    selected_row = st.selectbox("Select Question Bank", df.index)
-    
-    if selected_row is not None:
-        row = df.iloc[selected_row]
-        parsed_data = parse_question_data(row['questions'], row['options'])
-        
-        for i, q in enumerate(parsed_data):
-            st.write(f"Q{i+1}: {q['question']}")
-            if q['options']:
-                user_answer = st.radio(f"Select your answer for Q{i+1}", q['options'], key=f'answer_{i}')
-        
-        if st.button("Submit"):
-            score, total_questions = evaluate_answers(parsed_data)
-            certificate_message = generate_certificate(score, total_questions)
-            st.write(certificate_message)
+
+    # Create a dictionary to map "Topic - Technology" to the row index
+    question_bank_options = {f"{row['topic']} - {row['technology']}": index for index, row in df.iterrows()}
+    selected_option = st.selectbox("Select Question Bank", options=list(question_bank_options.keys()))
+
+    # Retrieve the selected row index from the options dictionary
+    selected_row_index = question_bank_options[selected_option]
+
+    # Retrieve the selected question bank row based on the selected index
+    row = df.iloc[selected_row_index]
+    parsed_data = parse_question_data(row['questions'], row['options'])
+
+    # Display each question and collect user answers
+    for i, q in enumerate(parsed_data):
+        st.write(f"Q{i+1}: {q['question']}")
+        if q['options']:
+            # Radio button for answer selection per question
+            user_answer = st.radio(f"Select your answer for Q{i+1}", q['options'], key=f'answer_{i}')
+
+    # Submit button to evaluate answers
+    if st.button("Submit"):
+        # Calculate the score based on the user's answers
+        score, total_questions = evaluate_answers(parsed_data)
+
+        # Generate certificate message and display it
+        certificate_message = generate_certificate(score, total_questions)
+        st.write(certificate_message)
+
+        # Check if the user qualifies for a certificate (score >= 70%)
+        if score / total_questions >= 0.7:
+            # Generate the user’s full name for the certificate
+            full_name = f"{st.session_state.get('firstname', '')} {st.session_state.get('lastname', '')}"
             
-            if score / total_questions >= 0.7:
-                full_name = f"{st.session_state.get('firstname', '')} {st.session_state.get('lastname', '')}"
-                pdf_buffer = create_pdf_certificate(full_name, row['technology'] + " - " + row['topic'], score, total_questions)
-                st.download_button(
-                    label="Download Certificate",
-                    data=pdf_buffer,
-                    file_name="completion_certificate.pdf",
-                    mime="application/pdf"
-                )
-            else:
-                st.write("You need at least 70% to receive a certificate.")
-            # Track progress
-            user_id = st.session_state.get('user_id')  # Ensure 'user_id' is properly set
-            if user_id:
-                resource_id = row['id']  # Assuming `id` is the primary key in the question bank table
-                store_max_score(user_id, resource_id, score, total_questions)
-            else:
-                st.error("User ID not found. Please ensure you are logged in.")
+            # Create a PDF certificate and provide a download button
+            pdf_buffer = create_pdf_certificate(full_name, f"{row['technology']} - {row['topic']}", score, total_questions)
+            st.download_button(
+                label="Download Certificate",
+                data=pdf_buffer,
+                file_name="completion_certificate.pdf",
+                mime="application/pdf"
+            )
+        else:
+            # Inform the user if they did not meet the certificate criteria
+            st.write("You need at least 70% to receive a certificate.")
 
-
-
+        # Track user progress and send notifications if logged in
+        user_id = st.session_state.get('user_id')  # Ensure 'user_id' exists in session state
+        if user_id:
+            # Assuming `id` is the primary key of the selected question bank
+            resource_id = row['id']
+            
+            # Store maximum score achieved and send a notification
+            store_max_score(user_id, resource_id, score, total_questions)
+            send_notification(user_id, score, total_questions)
+        else:
+            # Display an error if the user ID is missing
+            st.error("User ID not found. Please ensure you are logged in.")
 
 
 

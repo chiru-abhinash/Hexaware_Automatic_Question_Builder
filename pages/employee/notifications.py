@@ -19,8 +19,6 @@ def show_notifications_page():
             st.write(f"• {notification['notification_text']} (Received: {notification['sent_at']})")
         # Mark notifications as read after displaying them
         mark_notifications_as_read(user_id)
-    else:
-        st.write("No new notifications.")
 
     # Fetch all notifications for the current employee
     all_notifications = get_all_notifications(user_id)
@@ -31,13 +29,18 @@ def show_notifications_page():
             if notification['is_read']:
                 st.write(f"✓ {notification['notification_text']} (Received: {notification['sent_at']})")
             else:
-                st.write(f"• {notification['notification_text']} (Received: {notification['sent_at']})")
+                st.markdown(f"**• {notification['notification_text']}** _(Received: {notification['sent_at']})_")
     else:
         st.write("No notifications available.")
 
-    # Add a button to go back to the employee dashboard
-    if st.button("Back to Dashboard"):
-        st.session_state.page = "employee_dashboard"  # Adjust based on your navigation structure
+    # Add a button to refresh notifications or go back to the dashboard
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        if st.button("Refresh Notifications"):
+            st.rerun()  # Rerun the page to check for new notifications
+    with col2:
+        if st.button("Back to Dashboard"):
+            st.session_state.page = "employee_dashboard"  # Adjust based on your navigation structure
 
 if __name__ == "__main__":
     show_notifications_page()

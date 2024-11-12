@@ -59,7 +59,37 @@ def fetch_topics_from_database(technology):
 
     return list(topics)
 
+
+# Corrected insert_notification function using session-based user_id
+def insert_notification(notification_text, notification_type, priority=0, valid_until=None):
+    conn = sqlite3.connect('app_database.db')
+    cursor = conn.cursor()
+
+    user_id = st.session_state.get("user_id")
+
+    if not user_id:
+        st.error("User is not logged in.")
+        return
+
+    try:
+        cursor.execute('''INSERT INTO notifications (user_id, notification_text, notification_type, priority, is_read, valid_until)
+                          VALUES (?, ?, ?, ?, ?, ?)''', 
+                       (user_id, notification_text, notification_type, priority, False, valid_until))  # `False` for is_read
+        conn.commit()
+        #st.success("Notification inserted successfully!")
+    
+    except Exception as e:
+        conn.rollback()
+        st.error(f"An error occurred while inserting notification: {str(e)}")
+    
+    finally:
+        conn.close()
+
+
+
+
 def generate_questions(technology, topics, num_questions, difficulty_level):
+    trainer_id = st.session_state.get("user_id")
     # Prompt construction
     prompt = (f"Generate {num_questions} {difficulty_level} questions about {', '.join(topics)} in {technology}. "
               "Include four answer options for each question, with the first option always being the correct one. "
@@ -111,10 +141,15 @@ def generate_questions(technology, topics, num_questions, difficulty_level):
 
         # Notify the user about completion
         if questions:
+            notification_text = f"Question bank generation complete! {num_questions} {difficulty_level} questions for {technology} on topics {', '.join(topics)}."
+            insert_notification(notification_text, "success")
+
+            # Show the notification in the UI
             show_notifications_page(
-                notification_text=f"Question bank generation complete! {num_questions} {difficulty_level} questions for {technology} on topics {', '.join(topics)}.",
+                notification_text=notification_text,
                 notification_type="success"
             )
+
         return questions
     else:
         st.error("Failed to generate questions. Please try again.")

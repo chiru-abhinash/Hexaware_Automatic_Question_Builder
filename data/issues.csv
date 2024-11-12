@@ -1,7 +1,6 @@
 id,reported_by,issue_description,resolution_status,resolution_notes,created_at,resolved_at
 1,8,i have problem while generating question bank,Resolved,Test notes,2024-09-22 05:26:23,2024-09-22 05:58:32
 2,8,This is feedback from trainer.,Pending,,2024-09-22 06:01:05,
-3,8,This is feedback from admin.,Pending,,2024-09-22 06:39:00,
 4,8,Error in logout,Pending,,2024-09-23 05:00:55,
 5,8,i have problem while generating question bank,Resolved,resolved bu eid 6,2024-09-23 05:02:12,2024-10-27 09:01:31
 6,8,Error in logout,Resolved,Solved,2024-09-23 07:19:22,2024-10-26 07:39:42
@@ -10,3 +9,5 @@ id,reported_by,issue_description,resolution_status,resolution_notes,created_at,r
 9,10,certificate not generating,Resolved,Certificate generation is fixed,2024-10-28 13:22:38.712609,2024-10-28 15:55:44
 10,10,page is reloading multiple times,Resolved,prioblem fixed,2024-10-28 18:40:51.168120,2024-10-28 18:41:33
 11,37,improve question quality,Resolved,informed to trainer,2024-11-04 13:12:07.642861,2024-11-04 13:12:38
+12,10,s1,Pending,,2024-11-12 11:07:24.925126,
+13,10,s2,Resolved,done,2024-11-12 11:18:05.476756,2024-11-12 11:18:20

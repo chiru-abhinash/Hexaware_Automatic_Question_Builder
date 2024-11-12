@@ -64,7 +64,84 @@
 
 # if __name__ == "__main__":
 #     show_employee_dashboard()
+
+
+
+# import streamlit as st
+# from utils.notifications import get_unseen_notifications
+
+# from pages.employee.request_question_bank import request_question_bank
+# from pages.employee.self_assessment import self_assessment
+# from pages.employee.submit_feedback import submit_feedback
+# from pages.employee.learning_development import learning_development
+# from pages.employee.request_learning_plan import request_learning_plan
+# from pages.employee.notifications import show_notifications_page  # Importing notifications page
+
+# def show_employee_dashboard():
+#     st.title("Employee Dashboard")
+#     st.write(f"Welcome, {st.session_state.username}")
+
+#     user_id = st.session_state.user_id  # Assuming user_id is stored in session state
+#     notifications = get_unseen_notifications(user_id)
+#     unread_count = len(notifications)
+
+#     # Add custom CSS to increase tab font size
+#     st.markdown(
+#         """
+#         <style>
+#         .streamlit-tabs .tab {
+#             font-size: 40px;  /* Change this value to adjust font size */
+#             font-weight: bold; /* Optional: make the font bold */
+#         }
+#         </style>
+#         """,
+#         unsafe_allow_html=True
+#     )
+
+#     # Create tabs for the different sections
+#     tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(
+#         ["Request Question Bank", "Self-Assessment", "Submit Feedback", 
+#          "Learning and Development", "Request Learning Plan", "Notifications", "Logout"]
+#     )
+
+#     # Display the appropriate content in each tab
+#     with tab1:
+#         request_question_bank()
+    
+#     with tab2:
+#         self_assessment()
+    
+#     with tab3:
+#         submit_feedback()
+    
+#     with tab4:
+#         learning_development()
+    
+#     with tab5:
+#         request_learning_plan()
+    
+#     with tab6:
+#         # Notifications Tab Content
+#         st.subheader(f"Notifications ({unread_count} new)")
+#         show_notifications_page()
+
+#     # Logout tab functionality
+#     with tab7:
+#         if st.button("Logout"):
+#             # Clear session state
+#             st.session_state.authenticated = False
+#             st.session_state.role = None
+#             st.session_state.username = ''
+#             st.session_state.user_id = None  # Clear user ID
+#             st.session_state.page = "login"  # Set the page to login
+#             st.rerun()  # Refresh to redirect to login page
+
+# if __name__ == "__main__":
+#     show_employee_dashboard()
+
+
 import streamlit as st
+from streamlit_option_menu import option_menu
 from utils.notifications import get_unseen_notifications
 
 from pages.employee.request_question_bank import request_question_bank
@@ -72,7 +149,7 @@ from pages.employee.self_assessment import self_assessment
 from pages.employee.submit_feedback import submit_feedback
 from pages.employee.learning_development import learning_development
 from pages.employee.request_learning_plan import request_learning_plan
-from pages.employee.notifications import show_notifications_page  # Importing notifications page
+from pages.employee.notifications import show_notifications_page  # Import notifications page
 
 def show_employee_dashboard():
     st.title("Employee Dashboard")
@@ -82,56 +159,51 @@ def show_employee_dashboard():
     notifications = get_unseen_notifications(user_id)
     unread_count = len(notifications)
 
-    # Add custom CSS to increase tab font size
-    st.markdown(
-        """
-        <style>
-        .streamlit-tabs .tab {
-            font-size: 40px;  /* Change this value to adjust font size */
-            font-weight: bold; /* Optional: make the font bold */
+    # Horizontal option menu with icons
+    selected_option = option_menu(
+        menu_title=None,  # Hide the menu title
+        options=["Request Question Bank", "Self-Assessment", "Submit Feedback", 
+                 "Learning & Development", "Request Learning Plan", f"Notifications ({unread_count} new)", "Logout"],
+        icons=["book", "clipboard", "envelope", "lightbulb", "clipboard-check", "bell", "box-arrow-right"],
+        menu_icon="cast", 
+        default_index=0, 
+        orientation="horizontal",
+        styles={
+            "container": {"padding": "0", "background-color": "#f8f9fa"},
+            "icon": {"color": "blue", "font-size": "18px"},
+            "nav-link": {"font-size": "18px", "text-align": "center", "margin": "0px", "--hover-color": "#e0e0e0"},
+            "nav-link-selected": {"background-color": "#02ab21"},
         }
-        </style>
-        """,
-        unsafe_allow_html=True
     )
 
-    # Create tabs for the different sections
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(
-        ["Request Question Bank", "Self-Assessment", "Submit Feedback", 
-         "Learning and Development", "Request Learning Plan", "Notifications", "Logout"]
-    )
-
-    # Display the appropriate content in each tab
-    with tab1:
+    # Display content based on the selected menu option
+    if selected_option == "Request Question Bank":
         request_question_bank()
     
-    with tab2:
+    elif selected_option == "Self-Assessment":
         self_assessment()
     
-    with tab3:
+    elif selected_option == "Submit Feedback":
         submit_feedback()
     
-    with tab4:
+    elif selected_option == "Learning & Development":
         learning_development()
     
-    with tab5:
+    elif selected_option == "Request Learning Plan":
         request_learning_plan()
     
-    with tab6:
-        # Notifications Tab Content
+    elif selected_option.startswith("Notifications"):
         st.subheader(f"Notifications ({unread_count} new)")
         show_notifications_page()
-
-    # Logout tab functionality
-    with tab7:
-        if st.button("Logout"):
-            # Clear session state
-            st.session_state.authenticated = False
-            st.session_state.role = None
-            st.session_state.username = ''
-            st.session_state.user_id = None  # Clear user ID
-            st.session_state.page = "login"  # Set the page to login
-            st.rerun()  # Refresh to redirect to login page
+    
+    elif selected_option == "Logout":
+        # Logout functionality
+        st.session_state.authenticated = False
+        st.session_state.role = None
+        st.session_state.username = ''
+        st.session_state.user_id = None
+        st.session_state.page = "login"  # Set the page to login
+        st.rerun()  # Refresh to redirect to login page
 
 if __name__ == "__main__":
     show_employee_dashboard()

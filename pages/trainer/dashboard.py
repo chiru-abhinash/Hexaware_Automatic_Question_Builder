@@ -54,68 +54,68 @@
 
 
 
-import streamlit as st
-from pages.trainer.upload_curriculum import show_upload_curriculum_page
-from pages.trainer.generate_question_bank import show_generate_question_bank_page
-from pages.trainer.review_edit_question_bank import show_review_edit_question_bank_page
-from pages.trainer.download_question_bank import show_download_question_bank_page
-from pages.trainer.feedback import show_feedback_page
-from pages.trainer.notifications import show_notifications_page  # Import the notifications page
-from utils.notifications import get_unseen_notifications  # Import notification utility function
+# import streamlit as st
+# from pages.trainer.upload_curriculum import show_upload_curriculum_page
+# from pages.trainer.generate_question_bank import show_generate_question_bank_page
+# from pages.trainer.review_edit_question_bank import show_review_edit_question_bank_page
+# from pages.trainer.download_question_bank import show_download_question_bank_page
+# from pages.trainer.feedback import show_feedback_page
+# from pages.trainer.notifications import show_notifications_page  # Import the notifications page
+# from utils.notifications import get_unseen_notifications  # Import notification utility function
 
-def show_trainer_dashboard():
-    st.title("Trainer Dashboard")
-    st.write(f"Welcome, {st.session_state.username}")
+# def show_trainer_dashboard():
+#     st.title("Trainer Dashboard")
+#     st.write(f"Welcome, {st.session_state.username}")
 
-    st.subheader("Quick Links")
+#     st.subheader("Quick Links")
     
-    # Use buttons to navigate to different functionalities
-    if st.button("Upload Curriculum"):
-        st.session_state.page = "upload_curriculum"
-    if st.button("Generate Question Bank"):
-        st.session_state.page = "generate_question_bank"
-    if st.button("Review and Edit Question Bank"):
-        st.session_state.page = "review_edit_question_bank"
-    if st.button("Download Question Bank"):
-        st.session_state.page = "download_question_bank"
-    if st.button("Feedback"):
-        st.session_state.page = "feedback"
+#     # Use buttons to navigate to different functionalities
+#     if st.button("Upload Curriculum"):
+#         st.session_state.page = "upload_curriculum"
+#     if st.button("Generate Question Bank"):
+#         st.session_state.page = "generate_question_bank"
+#     if st.button("Review and Edit Question Bank"):
+#         st.session_state.page = "review_edit_question_bank"
+#     if st.button("Download Question Bank"):
+#         st.session_state.page = "download_question_bank"
+#     if st.button("Feedback"):
+#         st.session_state.page = "feedback"
     
-    # Notification section
-    if st.button("View Notifications"):
-        st.session_state.page = "notifications"  # Set the page to notifications
-    else:
-        unseen_notifications = get_unseen_notifications(st.session_state.user_id)  # Get unseen notifications
-        if unseen_notifications:
-            st.sidebar.warning(f"You have {len(unseen_notifications)} new notifications!")
+#     # Notification section
+#     if st.button("View Notifications"):
+#         st.session_state.page = "notifications"  # Set the page to notifications
+#     else:
+#         unseen_notifications = get_unseen_notifications(st.session_state.user_id)  # Get unseen notifications
+#         if unseen_notifications:
+#             st.sidebar.warning(f"You have {len(unseen_notifications)} new notifications!")
 
-    # Logout button logic
-    if st.button("Logout"):
-        # Clear session state
-        st.session_state.authenticated = False
-        st.session_state.role = None
-        st.session_state.username = ''
-        st.session_state.user_id = None  # Clear user ID
-        st.session_state.page = "login"  # Set the page to login
-        st.rerun()  # Refresh to redirect to login page
+#     # Logout button logic
+#     if st.button("Logout"):
+#         # Clear session state
+#         st.session_state.authenticated = False
+#         st.session_state.role = None
+#         st.session_state.username = ''
+#         st.session_state.user_id = None  # Clear user ID
+#         st.session_state.page = "login"  # Set the page to login
+#         st.rerun()  # Refresh to redirect to login page
 
-    # Load the correct page based on session state
-    if 'page' in st.session_state:
-        if st.session_state.page == "upload_curriculum":
-            show_upload_curriculum_page()
-        elif st.session_state.page == "generate_question_bank":
-            show_generate_question_bank_page()
-        elif st.session_state.page == "review_edit_question_bank":
-            show_review_edit_question_bank_page()
-        elif st.session_state.page == "download_question_bank":
-            show_download_question_bank_page()
-        elif st.session_state.page == "feedback":
-            show_feedback_page()
-        elif st.session_state.page == "notifications":
-            show_notifications_page()  # Show the notifications page
+#     # Load the correct page based on session state
+#     if 'page' in st.session_state:
+#         if st.session_state.page == "upload_curriculum":
+#             show_upload_curriculum_page()
+#         elif st.session_state.page == "generate_question_bank":
+#             show_generate_question_bank_page()
+#         elif st.session_state.page == "review_edit_question_bank":
+#             show_review_edit_question_bank_page()
+#         elif st.session_state.page == "download_question_bank":
+#             show_download_question_bank_page()
+#         elif st.session_state.page == "feedback":
+#             show_feedback_page()
+#         elif st.session_state.page == "notifications":
+#             show_notifications_page()  # Show the notifications page
 
-if __name__ == "__main__":
-    show_trainer_dashboard()
+# if __name__ == "__main__":
+#     show_trainer_dashboard()
 
 
 # import streamlit as st
@@ -180,3 +180,71 @@ if __name__ == "__main__":
 
 # if __name__ == "__main__":
 #     show_trainer_dashboard()
+
+
+import streamlit as st
+from streamlit_option_menu import option_menu
+from pages.trainer.upload_curriculum import show_upload_curriculum_page
+from pages.trainer.generate_question_bank import show_generate_question_bank_page
+from pages.trainer.review_edit_question_bank import show_review_edit_question_bank_page
+from pages.trainer.download_question_bank import show_download_question_bank_page
+from pages.trainer.feedback import show_feedback_page
+from pages.trainer.notifications import show_notifications_page  # Import the notifications page
+from utils.notifications import get_unseen_notifications  # Import notification utility function
+
+def show_trainer_dashboard():
+    st.title("Trainer Dashboard")
+    st.write(f"Welcome, {st.session_state.username}")
+
+    user_id = st.session_state.user_id  # Get user ID from session state
+    unseen_notifications = get_unseen_notifications(user_id)
+    unread_count = len(unseen_notifications)
+
+    # Horizontal option menu with icons
+    selected_option = option_menu(
+        menu_title=None,  # Hide the menu title
+        options=["Upload Curriculum", "Generate Question Bank", "Review & Edit Question Bank", 
+                 "Download Question Bank", "Feedback", f"Notifications ({unread_count} new)", "Logout"],
+        icons=["upload", "plus-square", "bi-pencil-square", "download", "chat-left-dots", "bell", "box-arrow-right"],
+        menu_icon="cast", 
+        default_index=0, 
+        orientation="horizontal",
+        styles={
+            "container": {"padding": "0", "background-color": "#f8f9fa"},
+            "icon": {"color": "blue", "font-size": "18px"},
+            "nav-link": {"font-size": "18px", "text-align": "center", "margin": "0px", "--hover-color": "#e0e0e0"},
+            "nav-link-selected": {"background-color": "#02ab21"},
+        }
+    )
+
+    # Display content based on the selected menu option
+    if selected_option == "Upload Curriculum":
+        show_upload_curriculum_page()
+    
+    elif selected_option == "Generate Question Bank":
+        show_generate_question_bank_page()
+    
+    elif selected_option == "Review & Edit Question Bank":
+        show_review_edit_question_bank_page()
+    
+    elif selected_option == "Download Question Bank":
+        show_download_question_bank_page()
+    
+    elif selected_option == "Feedback":
+        show_feedback_page()
+    
+    elif selected_option.startswith("Notifications"):
+        st.subheader(f"Notifications ({unread_count} new)")
+        show_notifications_page()
+    
+    elif selected_option == "Logout":
+        # Logout functionality
+        st.session_state.authenticated = False
+        st.session_state.role = None
+        st.session_state.username = ''
+        st.session_state.user_id = None
+        st.session_state.page = "login"  # Set the page to login
+        st.rerun()  # Refresh to redirect to login page
+
+if __name__ == "__main__":
+    show_trainer_dashboard()

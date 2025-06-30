@@ -15,7 +15,8 @@ import os
 load_dotenv()
 
 # Initialize Google Gemini API
-api_key = os.getenv("GEMINI_API_KEY")
+api_key = "AIzaSyCttibuV1gy1fRUQsGYy7-2clAhSJeUyD0"
+#os.getenv("GEMINI_API_KEY")
 if api_key:
     genai.configure(api_key=api_key)
 else:
